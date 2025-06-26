@@ -9,7 +9,9 @@
     "start:watch": "nodemon -r dotenv/config --watch src --legacy-watch --exec ts-node src/app.ts",
     "build": "tsc",
     "sequelize": "sequelize-cli",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "sequelize-cli db:migrate",
+    "seed": "sequelize-cli db:seed:all"
   },
   "repository": {
     "type": "git",
