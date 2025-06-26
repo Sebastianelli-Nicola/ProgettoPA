@@ -1,5 +1,6 @@
 import express from "express";
 import { getSequelizeInstance } from "./DB/sequelize";
+import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
 const port = 3000;
@@ -14,16 +15,12 @@ app.listen(port, () => {
 
 
 
-
-
-
-
-
-
 console.log("Ciao dal tuo primo file TypeScript!");
 
 // Inizializza Sequelize
 app.use(express.json());
+
+app.use(errorHandler);
 
 const sequelize = getSequelizeInstance();
 
