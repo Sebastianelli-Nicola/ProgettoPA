@@ -1,12 +1,23 @@
 import { DataTypes, Model } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';
-import { User } from './user';
+import { User } from './User';
 
-export class Wallet extends Model {
+interface WalletAttributes {
+  id: number;
+  userId: number;
+  balance: number;
+}   
+
+type WalletCreationAttributes = Omit<WalletAttributes, 'id'>;
+
+export class Wallet extends Model<WalletAttributes, WalletCreationAttributes> implements WalletAttributes {
   public id!: number;
   public userId!: number;
   public balance!: number;
 }
+
+//istanza singleton di sequelize
+const sequelize = getSequelizeInstance();
 
 Wallet.init({
   id: {

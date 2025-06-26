@@ -1,9 +1,20 @@
 import { Model, DataTypes } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';
-import { User } from './user';
-import { Auction } from './auction';
+import { User } from './User';
+import { Auction } from './Auction';
 
-export class Participation extends Model {
+interface ParticipationAttributes {
+    id: number;
+    userId: number;
+    auctionId: number;
+    fee: number; // quota di partecipazione
+    isWinner: boolean; // indica se l'utente è il vincitore dell'asta
+    isValid: boolean; // indica se la partecipazione è valida (può essere false se l'asta viene annullata)
+}
+
+type ParticipationCreationAttributes = Omit<ParticipationAttributes, 'id' | 'isWinner' | 'isValid'>;    
+
+export class Participation extends Model<ParticipationAttributes, ParticipationCreationAttributes> implements ParticipationAttributes {
   public id!: number;
   public userId!: number;
   public auctionId!: number;
@@ -11,6 +22,9 @@ export class Participation extends Model {
   public isWinner!: boolean;
   public isValid!: boolean;
 }
+
+//istanza singleton di sequelize
+const sequelize = getSequelizeInstance();
 
 Participation.init({
   id: {
@@ -39,7 +53,7 @@ Participation.init({
     defaultValue: true, // diventa false se l’asta viene annullata
   }
 }, {
-  sequelize: getSequelizeInstance(),
+  sequelize,
   modelName: 'Participation',
   timestamps: true,
 });

@@ -1,14 +1,26 @@
 import { Model, DataTypes } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';
-import { User } from './user';
-import { Auction } from './auction';
+import { User } from './User';
+import { Auction } from './Auction';
 
-export class Bid extends Model {
+interface BidAttributes {
+    id: number;
+    userId: number;
+    auctionId: number;
+    createdAt: Date;
+}
+
+type BidCreationAttributes = Omit<BidAttributes, 'id' | 'createdAt'>;
+
+export class Bid extends Model<BidAttributes, BidCreationAttributes>    implements BidAttributes {
   public id!: number;
   public userId!: number;
   public auctionId!: number;
   public createdAt!: Date;
 }
+
+//istanza singleton di sequelize
+const sequelize = getSequelizeInstance();
 
 Bid.init({
   id: {
@@ -23,9 +35,14 @@ Bid.init({
   auctionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
   }
 }, {
-  sequelize: getSequelizeInstance(),
+  sequelize,
   modelName: 'Bid',
   timestamps: true,
 });

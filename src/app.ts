@@ -9,20 +9,19 @@ const port = 3000;
 // Inizializza Sequelize
 app.use(express.json());
 
+// Middleware di errore
 app.use(errorHandler);
 
+// Rotte
 app.get("/", (req, res) => {
   res.send("Ciao da TypeScript + Docker!gedgdgdgdg 🚀");
 });
 
-app.listen(port, () => {
-  console.log(`Server attivo su http://localhost:${port}`);
+app.use('/auth', authRoutes); 
+
+app.get("/test", (_, res) => {
+  res.send('Asta Snap API attiva!');
 });
-
-app.use('/auth', authRoutes);
-
-console.log("Ciao dal tuo primo file TypeScript!");
-
 
 const sequelize = getSequelizeInstance();
 
@@ -30,8 +29,8 @@ sequelize.authenticate()
   .then(() => console.log("Connessione al database stabilita con successo!"))
   .catch((error) => console.error("Impossibile connettersi al database:", error));
 
-app.get("/test", (_, res) => {
-  res.send('Asta Snap API attiva!');
+app.listen(port, () => {
+  console.log(`Server attivo su http://localhost:${port}`);
 });
 
-export default app; 
+export default app;
