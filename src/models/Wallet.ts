@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';
-import { User } from './user';
+import { User } from './User';
 
 export class Wallet extends Model {
   public id!: number;

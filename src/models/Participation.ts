@@ -1,7 +1,7 @@
 import { Model, DataTypes } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';
-import { User } from './user';
-import { Auction } from './auction';
+import { User } from './User';
+import { Auction } from './Auction';
 
 export class Participation extends Model {
   public id!: number;

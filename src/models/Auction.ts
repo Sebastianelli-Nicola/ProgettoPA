@@ -18,7 +18,7 @@ interface AuctionAttributes {
 
 interface AuctionCreationAttributes extends Optional<AuctionAttributes, 'id' | 'status'> {}
 
-class Auction extends Model<AuctionAttributes, AuctionCreationAttributes> implements AuctionAttributes {
+export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes> implements AuctionAttributes {
     public id!: number;
     public title!: string;
     public minParticipants!: number;
@@ -58,5 +58,3 @@ Auction.init({
   tableName: 'auctions',
   modelName: 'Auction',
 });
-
-export default Auction;
