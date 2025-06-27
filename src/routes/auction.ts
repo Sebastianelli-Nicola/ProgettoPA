@@ -14,16 +14,6 @@ router.post('/', authenticateJWT, authorizeRoles('admin', 'bid-creator'), create
 // Permette di filtrare per status (created, open, bidding, closed)
 router.get('/', getAuctions);
 
-// Route per creare un'asta
-// Solo gli utenti con ruolo 'admin' o 'bid-creator' possono creare un'asta
-// Richiede autenticazione JWT
-router.post('/', authenticateJWT, authorizeRoles('admin', 'bid-creator'), createAuction);
-
-// Route per ottenere le aste
-// Permette di filtrare per status (created, open, bidding, closed)
-router.get('/', getAuctions);
-
-
 router.post(
   '/join',
   authenticateJWT,
