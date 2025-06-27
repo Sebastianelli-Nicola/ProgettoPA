@@ -1,5 +1,6 @@
 import { Model, DataTypes, Optional } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';  
+import { Participation } from './Participation';
 
 interface AuctionAttributes {
     id: number;
@@ -63,3 +64,5 @@ Auction.init({
   modelName: 'Auction',
   timestamps: true, // Abilita createdAt e updatedAt
 });
+
+//Auction.hasMany(Participation);

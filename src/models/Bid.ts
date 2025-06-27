@@ -51,6 +51,7 @@ Bid.init({
 }, {
   sequelize,
   modelName: 'Bid',
+  tableName: 'bid',
   timestamps: true,
 });
 

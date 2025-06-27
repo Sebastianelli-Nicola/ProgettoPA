@@ -69,6 +69,7 @@ Participation.init({
 }, {
   sequelize,
   modelName: 'Participation',
+  tableName: 'participations',
   timestamps: true,
 });
 

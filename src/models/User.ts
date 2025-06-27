@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { getSequelizeInstance } from "../DB/sequelize";
 import { Wallet } from "./Wallet";
+import { Participation } from "./Participation";
 
 // Definizione dell'interfaccia per gli attributi del modello User
 interface UserAttributes {
@@ -80,3 +81,5 @@ User.init(
     }
 );
 
+//User.hasOne(Wallet);
+//User.hasMany(Participation);

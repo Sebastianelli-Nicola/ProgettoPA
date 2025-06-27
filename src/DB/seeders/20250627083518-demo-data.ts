@@ -42,7 +42,7 @@ export default {
         email: 'participant2@example.com',
         password: 'hashedpassword4',
         role: 'bid-partecipant',
-        wallet: 600,
+        wallet: 1600,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -51,7 +51,7 @@ export default {
     // 2. WALLETS (uno per partecipant1 e partecipant2)
     await queryInterface.bulkInsert('wallets', [
       { id: 1, userId: 3, balance: 500 },
-      { id: 2, userId: 4, balance: 600 },
+      { id: 2, userId: 4, balance: 1600 },
     ]);
 
     // 3. AUCTIONS
