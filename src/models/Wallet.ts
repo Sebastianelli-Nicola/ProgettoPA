@@ -6,6 +6,8 @@ interface WalletAttributes {
   id: number;
   userId: number;
   balance: number;
+  createdAt?: Date; // timestamp di creazione
+  updatedAt?: Date; // timestamp di aggiornamento
 }   
 
 type WalletCreationAttributes = Omit<WalletAttributes, 'id'>;
@@ -14,6 +16,8 @@ export class Wallet extends Model<WalletAttributes, WalletCreationAttributes> im
   public id!: number;
   public userId!: number;
   public balance!: number;
+  public createdAt?: Date;  
+  public updatedAt?: Date;
 }
 
 //istanza singleton di sequelize
@@ -33,11 +37,24 @@ Wallet.init({
     type: DataTypes.FLOAT,
     allowNull: false,
     defaultValue: 0,
-  }
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
 }, {
-  sequelize: getSequelizeInstance(),
+  sequelize,
   modelName: 'Wallet',
+  tableName: 'wallets',
+  timestamps: true, // Abilita createdAt e updatedAt
 });
 
-User.hasOne(Wallet, { foreignKey: 'userId', as: 'wallet' });
-Wallet.belongsTo(User, { foreignKey: 'userId' });
+User.hasOne(Wallet, { foreignKey: 'userId', as: 'userWallet' });
+Wallet.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+

@@ -10,6 +10,8 @@ interface ParticipationAttributes {
     fee: number; // quota di partecipazione
     isWinner: boolean; // indica se l'utente è il vincitore dell'asta
     isValid: boolean; // indica se la partecipazione è valida (può essere false se l'asta viene annullata)
+    createdAt?: Date; // timestamp di creazione
+    updatedAt?: Date; // timestamp di aggiornamento
 }
 
 type ParticipationCreationAttributes = Omit<ParticipationAttributes, 'id' | 'isWinner' | 'isValid'>;    
@@ -21,6 +23,8 @@ export class Participation extends Model<ParticipationAttributes, ParticipationC
   public fee!: number;
   public isWinner!: boolean;
   public isValid!: boolean;
+  public createdAt?: Date;
+  public updatedAt?: Date;
 }
 
 //istanza singleton di sequelize
@@ -51,7 +55,17 @@ Participation.init({
   isValid: {
     type: DataTypes.BOOLEAN,
     defaultValue: true, // diventa false se l’asta viene annullata
-  }
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
 }, {
   sequelize,
   modelName: 'Participation',

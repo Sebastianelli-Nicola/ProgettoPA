@@ -13,6 +13,8 @@ export default {
         password: 'hashedpassword1',
         role: 'admin',
         wallet: 1000,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: 2,
@@ -21,6 +23,8 @@ export default {
         password: 'hashedpassword2',
         role: 'bid-creator',
         wallet: 800,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: 3,
@@ -29,6 +33,8 @@ export default {
         password: 'hashedpassword3',
         role: 'bid-partecipant',
         wallet: 500,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: 4,
@@ -37,6 +43,8 @@ export default {
         password: 'hashedpassword4',
         role: 'bid-partecipant',
         wallet: 600,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ]);
 
@@ -61,6 +69,8 @@ export default {
         startTime: new Date(),
         endTime: new Date(Date.now() + 3600000),
         relaunchTime: 5,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ]);
 
@@ -73,6 +83,8 @@ export default {
         fee: 50,
         isWinner: false,
         isValid: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: 2,
@@ -81,6 +93,8 @@ export default {
         fee: 50,
         isWinner: false,
         isValid: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ]);
 

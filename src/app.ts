@@ -2,6 +2,7 @@ import express from "express";
 import { getSequelizeInstance } from "./DB/sequelize";
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth';
+import auctionRoutes from './routes/auction';
 
 const app = express();
 const port = 3000;
@@ -18,6 +19,8 @@ app.get("/", (req, res) => {
 });
 
 app.use('/auth', authRoutes); 
+
+app.use('/auction', auctionRoutes);
 
 app.get("/test", (_, res) => {
   res.send('Asta Snap API attiva!');

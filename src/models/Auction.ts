@@ -14,6 +14,8 @@ interface AuctionAttributes {
     startTime: Date;
     endTime: Date;
     relaunchTime: number; //durata della fase rilancio in minuti
+    createdAt?: Date; //timestamp di creazione
+    updatedAt?: Date; //timestamp di aggiornamento
 }
 
 interface AuctionCreationAttributes extends Optional<AuctionAttributes, 'id' | 'status'> {}
@@ -33,8 +35,8 @@ export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes>
     public relaunchTime!: number;
 
     // timestamps!
-    //public readonly createdAt!: Date;
-    //public readonly updatedAt!: Date;
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
 //istanza singleton di sequelize
@@ -53,8 +55,11 @@ Auction.init({
   startTime: { type: DataTypes.DATE, allowNull: false },
   endTime: { type: DataTypes.DATE, allowNull: false },
   relaunchTime: { type: DataTypes.INTEGER, allowNull: false },
+  createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, {
   sequelize,
   tableName: 'auctions',
   modelName: 'Auction',
+  timestamps: true, // Abilita createdAt e updatedAt
 });

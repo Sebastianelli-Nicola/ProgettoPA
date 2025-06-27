@@ -20,8 +20,8 @@ export = {
         allowNull: false
       },
       wallet: { type: DataTypes.INTEGER, defaultValue: 0 },
-      //createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-      //updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     });
 
     // AUCTIONS
@@ -41,8 +41,8 @@ export = {
       startTime: { type: DataTypes.DATE, allowNull: false },
       endTime: { type: DataTypes.DATE, allowNull: false },
       relaunchTime: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-      //createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-      //updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     });
 
     // WALLETS
@@ -55,8 +55,8 @@ export = {
         onDelete: 'CASCADE',
       },
       balance: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
-      //createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-      //updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     });
 
     // BIDS
@@ -74,8 +74,8 @@ export = {
         references: { model: 'auctions', key: 'id' },
         onDelete: 'CASCADE',
       },
-      //createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-      //updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     });
 
     // PARTICIPATIONS
@@ -96,8 +96,8 @@ export = {
       fee: { type: DataTypes.INTEGER, allowNull: false },
       isWinner: { type: DataTypes.BOOLEAN, defaultValue: false },
       isValid: { type: DataTypes.BOOLEAN, defaultValue: true },
-      //createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }, 
-      //updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }, 
+      updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     });
   },
 

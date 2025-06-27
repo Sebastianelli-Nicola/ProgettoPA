@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { getSequelizeInstance } from "../DB/sequelize";
+import { Wallet } from "./Wallet";
 
 // Definizione dell'interfaccia per gli attributi del modello User
 interface UserAttributes {
@@ -9,8 +10,8 @@ interface UserAttributes {
     password: string;
     role: 'admin' | 'bid-creator' | 'bid-partecipant';
     wallet: number;
-    //createdAt?: Date;
-    //updatedAt?: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 //Specifica campi opzionali per la creazione di un nuovo utente
@@ -23,8 +24,8 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
     public password!: string;
     public role!: 'admin' | 'bid-creator' | 'bid-partecipant';
     public wallet!: number;
-    //public createdAt?: Date;
-    //public updatedAt?: Date;
+    public createdAt?: Date;
+    public updatedAt?: Date;
 }
 
 //istanza singleton di sequelize
@@ -60,11 +61,22 @@ User.init(
             type: DataTypes.INTEGER,
             defaultValue: 0, // Valore predefinito per il portafoglio
         },
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
     },
     {
         sequelize, // Passa l'istanza di Sequelize
         modelName: 'User',
         tableName: 'users',
-        //timestamps: true, // Abilita createdAt e updatedAt
+        timestamps: true, // Abilita createdAt e updatedAt
     }
 );
+

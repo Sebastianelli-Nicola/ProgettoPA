@@ -8,6 +8,7 @@ interface BidAttributes {
     userId: number;
     auctionId: number;
     createdAt: Date;
+    updatedAt: Date;
 }
 
 type BidCreationAttributes = Omit<BidAttributes, 'id' | 'createdAt'>;
@@ -17,6 +18,7 @@ export class Bid extends Model<BidAttributes, BidCreationAttributes>    implemen
   public userId!: number;
   public auctionId!: number;
   public createdAt!: Date;
+  public updatedAt!: Date;
 }
 
 //istanza singleton di sequelize
@@ -40,7 +42,12 @@ Bid.init({
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW,
-  }
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
 }, {
   sequelize,
   modelName: 'Bid',
