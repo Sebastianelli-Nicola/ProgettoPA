@@ -55,7 +55,7 @@ export default {
     ]);
 
     // 3. AUCTIONS
-    await queryInterface.bulkInsert('auctions', [
+    /*await queryInterface.bulkInsert('auctions', [
       {
         id: 1,
         title: 'Auction 1',
@@ -72,10 +72,10 @@ export default {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    ]);
+    ]);*/
 
     // 4. PARTICIPATIONS
-    await queryInterface.bulkInsert('participations', [
+    /*await queryInterface.bulkInsert('participations', [
       {
         id: 1,
         userId: 3,
@@ -103,7 +103,7 @@ export default {
       { id: 1, userId: 3, auctionId: 1 },
       { id: 2, userId: 4, auctionId: 1 },
       { id: 3, userId: 3, auctionId: 1 },
-    ]);
+    ]);*/
   },
 
   down: async (queryInterface: QueryInterface): Promise<void> => {
