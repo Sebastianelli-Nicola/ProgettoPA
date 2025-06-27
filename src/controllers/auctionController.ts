@@ -1,6 +1,6 @@
-// src/controllers/auctionController.ts
-import { Request, Response } from 'express';
+import { AuthRequest } from '../middlewares/authMiddleware';
 import { Auction } from '../models/Auction';
+import { Request, Response } from 'express';
 import { Participation } from '../models/Participation';
 import { Wallet } from '../models/Wallet'; 
 
@@ -13,7 +13,10 @@ declare global {
   }
 }
 
-export const createAuction = async (req: Request, res: Response): Promise<void> => {
+// Funzione per creare un'asta
+// Permette di creare un'asta con i seguenti campi: 
+// title, minParticipants, maxParticipants, entryFee, maxPrice, minIncrement, bidsPerParticipant, startTime, endTime, relaunchTime
+export const createAuction = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -25,16 +28,16 @@ export const createAuction = async (req: Request, res: Response): Promise<void> 
       bidsPerParticipant,
       startTime,
       endTime,
-      relaunchTime
+      relaunchTime,
+      status
     } = req.body;
 
-    // Validazione base (puoi migliorare con zod o Joi)
     if (
       !title || !minParticipants || !maxParticipants ||
-      !entryFee || !maxPrice || !minIncrement || !bidsPerParticipant ||
-      !startTime || !endTime || !relaunchTime
+      !entryFee || !maxPrice || !minIncrement ||
+      !bidsPerParticipant || !startTime || !endTime || !relaunchTime
     ) {
-      res.status(400).json({ message: 'Dati incompleti' });
+      res.status(400).json({ message: 'Dati mancanti o incompleti' });
       return;
     }
 
@@ -49,12 +52,35 @@ export const createAuction = async (req: Request, res: Response): Promise<void> 
       startTime,
       endTime,
       relaunchTime,
-      status: 'created', // valore default, ma puoi sovrascriverlo
+      status,
     });
 
     res.status(201).json({ message: 'Asta creata con successo', auction: newAuction });
   } catch (error) {
-    console.error('Errore durante la creazione asta:', error);
+    console.error('Errore creazione asta:', error);
+    res.status(500).json({ message: 'Errore interno del server' });
+  }
+};
+
+// Funzione per ottenere le aste
+// Permette di filtrare per status (created, open, bidding, closed)
+export const getAuctions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { status } = req.query;
+
+    // Ensure status is a string and matches allowed values
+    const allowedStatuses = ['created', 'open', 'bidding', 'closed'];
+    const statusStr = typeof status === 'string' && allowedStatuses.includes(status) ? status : undefined;
+    const whereClause = statusStr ? { status: statusStr } : undefined;
+
+    const auctions = await Auction.findAll({
+      where: whereClause,
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.json(auctions);
+  } catch (error) {
+    console.error('Errore lettura aste:', error);
     res.status(500).json({ message: 'Errore interno del server' });
   }
 };
@@ -117,3 +143,4 @@ export const joinAuction = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: 'Errore interno del server' });
   }
 };
+
