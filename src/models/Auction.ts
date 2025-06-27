@@ -41,18 +41,18 @@ export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes>
 const sequelize = getSequelizeInstance();
 
 Auction.init({
-  id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   title: { type: DataTypes.STRING, allowNull: false },
-  minParticipants: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-  maxParticipants: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+  minParticipants: { type: DataTypes.INTEGER, allowNull: false },
+  maxParticipants: { type: DataTypes.INTEGER, allowNull: false },
   entryFee: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   maxPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   minIncrement: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-  bidsPerParticipant: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+  bidsPerParticipant: { type: DataTypes.INTEGER, allowNull: false },
   status: { type: DataTypes.ENUM('created', 'open', 'bidding', 'closed'), defaultValue: 'created' },
   startTime: { type: DataTypes.DATE, allowNull: false },
   endTime: { type: DataTypes.DATE, allowNull: false },
-  relaunchTime: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+  relaunchTime: { type: DataTypes.INTEGER, allowNull: false },
 }, {
   sequelize,
   tableName: 'auctions',

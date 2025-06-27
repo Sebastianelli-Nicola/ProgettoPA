@@ -61,15 +61,15 @@ export = {
 
     // BIDS
     await queryInterface.createTable('bids', {
-      id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
       userId: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: { model: 'users', key: 'id' },
         onDelete: 'CASCADE',
       },
       auctionId: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: { model: 'auctions', key: 'id' },
         onDelete: 'CASCADE',
@@ -80,20 +80,20 @@ export = {
 
     // PARTICIPATIONS
     await queryInterface.createTable('participations', {
-      id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
       userId: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: { model: 'users', key: 'id' },
         onDelete: 'CASCADE',
       },
       auctionId: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: { model: 'auctions', key: 'id' },
         onDelete: 'CASCADE',
       },
-      fee: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+      fee: { type: DataTypes.INTEGER, allowNull: false },
       isWinner: { type: DataTypes.BOOLEAN, defaultValue: false },
       isValid: { type: DataTypes.BOOLEAN, defaultValue: true },
       //createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }, 
