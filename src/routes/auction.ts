@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticateJWT, authorizeRoles } from '../middlewares/authMiddleware';
 import { createAuction, getAuctions, joinAuction} from '../controllers/auctionController';
-import { closeAuction, updateAuctionStatus } from '../controllers/auctionController';
+import { closeAuction, updateAuctionStatus , startAuction} from '../controllers/auctionController';
 
 const router = Router();
 
@@ -38,5 +38,9 @@ router.post(
 // Richiede autenticazione JWT
 router.patch('/:id/status', authenticateJWT, authorizeRoles('admin', 'bid-creator'), updateAuctionStatus);
 
+// Route per avviare un'asta
+// Solo gli utenti con ruolo 'admin' o 'bid-creator' possono avviare un'asta
+// Richiede autenticazione JWT
+router.post('/:id/start', authenticateJWT, authorizeRoles('admin', 'bid-creator'), startAuction);
 
 export default router;

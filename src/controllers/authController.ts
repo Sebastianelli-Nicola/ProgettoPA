@@ -15,14 +15,23 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Controllo  email
     const exists = await User.findOne({ where: { email } });
     if (exists) {
       res.status(400).json({ message: 'Email già in uso' });
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password: hashedPassword, role , username });
+    //Controllo username
+    const usernameExists = await User.findOne({ where: { username } });
+    if (usernameExists) {
+      res.status(400).json({ message: 'Username già in uso' });
+      return;
+    }
+
+    //const hashedPassword = await bcrypt.hash(password, 10);
+    //const user = await User.create({ email, password: hashedPassword, role , username });
+    const user = await User.create({ email, password, role , username });
     await Wallet.create({ userId: user.id, balance: 100 });
 
     res.status(201).json({ message: 'Registrazione completata' });

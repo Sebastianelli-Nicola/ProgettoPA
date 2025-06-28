@@ -250,4 +250,70 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response): Prom
   }
 };
 
+// Funzione per avviare un'asta
+// Permette di avviare un'asta se ha almeno il numero minimo di partecipanti  
+export const startAuction = async (req: any, res: any): Promise<void> => {
+  try {
+    const auctionId = parseInt(req.params.id);
+
+    const auction = await Auction.findByPk(auctionId);
+    if (!auction) {
+      res.status(404).json({ message: 'Asta non trovata' });
+      return;
+    }
+
+    if (auction.status !== 'open') {
+      res.status(400).json({ message: 'L\'asta non è nello stato "open"' });
+      return;
+    }
+
+    const partecipanti = await Participation.count({
+      where: { auctionId, isValid: true }
+    });
+
+    /*if (partecipanti < auction.minParticipants) {
+      auction.status = 'cancelled';
+      await auction.save();
+
+      // Notifica ai client
+      broadcastToAuction(auctionId, {
+        type: 'auction_cancelled',
+        reason: 'Numero partecipanti insufficiente'
+      });
+
+      res.status(200).json({ message: 'Asta annullata per partecipanti insufficienti' });
+      return;
+    }*/
+
+    if (partecipanti < auction.minParticipants) {
+      auction.status = 'closed';
+      await auction.save();
+
+      broadcastToAuction(auctionId, {
+        type: 'auction_closed',
+        reason: 'Partecipanti insufficienti',
+      });
+
+      res.status(200).json({
+        message: 'Asta chiusa per partecipanti insufficienti',
+      });
+      return;
+    }
+
+    // Passa a bidding
+    auction.status = 'bidding';
+    await auction.save();
+
+    broadcastToAuction(auctionId, {
+      type: 'auction_started',
+      auctionId: auction.id,
+    });
+
+    res.status(200).json({ message: 'Asta avviata con successo' });
+
+  } catch (error) {
+    console.error('Errore avvio asta:', error);
+    res.status(500).json({ message: 'Errore interno del server' });
+  }
+};
 
