@@ -1,8 +1,10 @@
+import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { Auction } from '../models/Auction';
-import { Request, Response } from 'express';
 import { Participation } from '../models/Participation';
 import { Wallet } from '../models/Wallet'; 
+import { Bid } from '../models/Bid';
+import { broadcastToAuction } from '../websocket/websockethandlers';
 
 // Estendi l'interfaccia Request per includere 'user'
 declare global {
@@ -85,6 +87,8 @@ export const getAuctions = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
+// Funzione per unirsi a un'asta
+// Permette agli utenti di unirsi a un'asta se l'asta è aperta
 export const joinAuction = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req.user as any).id; // Assicurati che l'ID utente sia disponibile nel token JWT
@@ -143,4 +147,107 @@ export const joinAuction = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: 'Errore interno del server' });
   }
 };
+
+/**
+ * Chiude un'asta, imposta lo stato a 'closed' e seleziona il vincitore
+ */
+export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const auctionId = parseInt(req.params.id);
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+
+    // Recupera l'asta
+    const auction = await Auction.findByPk(auctionId);
+    if (!auction) {
+      res.status(404).json({ message: 'Asta non trovata' });
+      return;
+    }
+
+    if (auction.status === 'closed') {
+      res.status(400).json({ message: 'L\'asta è già chiusa' });
+      return;
+    }
+
+    if (auction.status !== 'bidding') {
+      res.status(400).json({ message: 'L\'asta deve essere nello stato "bidding" per essere chiusa' });
+      return;
+    }
+
+    // Recupera il bid più alto
+    const topBid = await Bid.findOne({
+      where: { auctionId },
+      order: [['amount', 'DESC'], ['createdAt', 'ASC']],
+    });
+
+    if (!topBid) {
+      res.status(400).json({ message: 'Nessuna offerta valida trovata' });
+      return;
+    }
+
+    // Imposta la partecipazione del vincitore come "isWinner = true"
+    const participation = await Participation.findOne({
+      where: { auctionId, userId: topBid.userId },
+    });
+
+    if (participation) {
+      participation.isWinner = true;
+      await participation.save();
+    }
+
+    // Chiude l'asta
+    auction.status = 'closed';
+    await auction.save();
+
+    // Notifica via WebSocket a tutti i client connessi
+    broadcastToAuction(auctionId, {
+      type: 'auction_closed',
+      winnerId: topBid.userId,
+      finalAmount: topBid.amount,
+    });
+
+    // Risposta al client
+    res.status(200).json({
+      message: 'Asta chiusa con successo',
+      winnerId: topBid.userId,
+      finalAmount: topBid.amount,
+    });
+  } catch (error) {
+    console.error('Errore chiusura asta:', error);
+    res.status(500).json({ message: 'Errore interno del server' });
+  }
+};
+
+// Funzione per aggiornare lo stato di un'asta
+// Permette di aggiornare lo stato di un'asta (created, open, bidding, closed)
+// Solo gli utenti con ruolo 'admin' o 'bid-creator' possono aggiornare lo stato di un'asta
+// Richiede autenticazione JWT
+export const updateAuctionStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const auctionId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    const validStatuses = ['created', 'open', 'bidding', 'closed'];
+
+    if (!validStatuses.includes(status)) {
+      res.status(400).json({ message: 'Stato non valido. Ammessi: created, open, bidding, closed' });
+      return;
+    }
+
+    const auction = await Auction.findByPk(auctionId);
+    if (!auction) {
+      res.status(404).json({ message: 'Asta non trovata' });
+      return;
+    }
+
+    auction.status = status as any;
+    await auction.save();
+
+    res.status(200).json({ message: 'Stato dell\'asta aggiornato con successo', auction });
+  } catch (error) {
+    console.error('Errore aggiornamento stato asta:', error);
+    res.status(500).json({ message: 'Errore interno del server' });
+  }
+};
+
 

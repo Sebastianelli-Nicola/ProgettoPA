@@ -9,22 +9,20 @@ interface UserAttributes {
     username: string;
     email: string;
     password: string;
-    role: 'admin' | 'bid-creator' | 'bid-partecipant';
-    wallet: number;
+    role: 'admin' | 'bid-creator' | 'bid-participant';
     createdAt?: Date;
     updatedAt?: Date;
 }
 
 //Specifica campi opzionali per la creazione di un nuovo utente
-type UserCreationAttributes = Optional<UserAttributes, 'id' | 'wallet'>;
+type UserCreationAttributes = Optional<UserAttributes, 'id' >;
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
     public id!: number;
     public username!: string;
     public email!: string;
     public password!: string;
-    public role!: 'admin' | 'bid-creator' | 'bid-partecipant';
-    public wallet!: number;
+    public role!: 'admin' | 'bid-creator' | 'bid-participant';
     public createdAt?: Date;
     public updatedAt?: Date;
 }
@@ -55,12 +53,8 @@ User.init(
             allowNull: false,
         },
         role: {
-            type: DataTypes.ENUM('admin', 'bid-creator', 'bid-partecipant'),
+            type: DataTypes.ENUM('admin', 'bid-creator', 'bid-participant'),
             allowNull: false,
-        },
-        wallet: {
-            type: DataTypes.INTEGER,
-            defaultValue: 0, // Valore predefinito per il portafoglio
         },
         createdAt: {
             type: DataTypes.DATE,

@@ -16,10 +16,10 @@ export = {
       email: { type: DataTypes.STRING(100), allowNull: false, unique: true },
       password: { type: DataTypes.STRING, allowNull: false },
       role: {
-        type: DataTypes.ENUM('admin', 'bid-creator', 'bid-partecipant'),
+        type: DataTypes.ENUM('admin', 'bid-creator', 'bid-participant'),
         allowNull: false
       },
-      wallet: { type: DataTypes.INTEGER, defaultValue: 0 },
+      //wallet: { type: DataTypes.INTEGER, defaultValue: 0 },
       createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     });
@@ -74,6 +74,7 @@ export = {
         references: { model: 'auctions', key: 'id' },
         onDelete: 'CASCADE',
       },
+      amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     });

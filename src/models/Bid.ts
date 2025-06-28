@@ -7,6 +7,7 @@ interface BidAttributes {
     id: number;
     userId: number;
     auctionId: number;
+    amount: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -17,6 +18,7 @@ export class Bid extends Model<BidAttributes, BidCreationAttributes>    implemen
   public id!: number;
   public userId!: number;
   public auctionId!: number;
+  public amount!: number; 
   public createdAt!: Date;
   public updatedAt!: Date;
 }
@@ -38,6 +40,10 @@ Bid.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -51,7 +57,7 @@ Bid.init({
 }, {
   sequelize,
   modelName: 'Bid',
-  tableName: 'bid',
+  tableName: 'bids',
   timestamps: true,
 });
 

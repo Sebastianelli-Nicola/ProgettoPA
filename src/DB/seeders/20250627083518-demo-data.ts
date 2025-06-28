@@ -7,42 +7,34 @@ export default {
     // 1. USERS
     await queryInterface.bulkInsert('users', [
       {
-        id: 1,
         username: 'admin',
         email: 'admin@example.com',
         password: 'hashedpassword1',
         role: 'admin',
-        wallet: 1000,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        id: 2,
         username: 'creator1',
         email: 'creator1@example.com',
         password: 'hashedpassword2',
         role: 'bid-creator',
-        wallet: 800,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        id: 3,
         username: 'participant1',
         email: 'participant1@example.com',
         password: 'hashedpassword3',
-        role: 'bid-partecipant',
-        wallet: 500,
+        role: 'bid-participant',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        id: 4,
         username: 'participant2',
         email: 'participant2@example.com',
         password: 'hashedpassword4',
-        role: 'bid-partecipant',
-        wallet: 1600,
+        role: 'bid-participant',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -50,14 +42,16 @@ export default {
 
     // 2. WALLETS (uno per partecipant1 e partecipant2)
     await queryInterface.bulkInsert('wallets', [
-      { id: 1, userId: 3, balance: 500 },
-      { id: 2, userId: 4, balance: 1600 },
+      { userId: 3, balance: 500 },
+      { userId: 4, balance: 1600 },
+      // Aggiungi altri wallet se necessario
+      { userId: 1, balance: 1000 }, // Admin wallet
+      { userId: 2, balance: 2000 }, // Creator wallet
     ]);
 
     // 3. AUCTIONS
-    /*await queryInterface.bulkInsert('auctions', [
+    await queryInterface.bulkInsert('auctions', [
       {
-        id: 1,
         title: 'Auction 1',
         minParticipants: 2,
         maxParticipants: 5,
@@ -72,12 +66,11 @@ export default {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    ]);*/
+    ]);
 
     // 4. PARTICIPATIONS
-    /*await queryInterface.bulkInsert('participations', [
+    await queryInterface.bulkInsert('participations', [
       {
-        id: 1,
         userId: 3,
         auctionId: 1,
         fee: 50,
@@ -87,7 +80,6 @@ export default {
         updatedAt: new Date(),
       },
       {
-        id: 2,
         userId: 4,
         auctionId: 1,
         fee: 50,
@@ -100,10 +92,10 @@ export default {
 
     // 5. BIDS
     await queryInterface.bulkInsert('bids', [
-      { id: 1, userId: 3, auctionId: 1 },
-      { id: 2, userId: 4, auctionId: 1 },
-      { id: 3, userId: 3, auctionId: 1 },
-    ]);*/
+      { userId: 3, auctionId: 1, amount: 100 },
+      { userId: 4, auctionId: 1, amount: 150 },
+      { userId: 3, auctionId: 1, amount: 200 },
+    ]);
   },
 
   down: async (queryInterface: QueryInterface): Promise<void> => {

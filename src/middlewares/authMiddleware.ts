@@ -34,7 +34,7 @@ export const authorizeRoles = (...allowedRoles: string[]) => {
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      res.status(403).json({ message: 'Accesso negato. Ruolo non autorizzato' });
+      res.status(403).json({ message: req.user.role + ' Accesso negato. Ruolo non autorizzato' });
       return;
     }
 
