@@ -151,7 +151,7 @@ export const joinAuction = async (req: Request, res: Response): Promise<void> =>
 /**
  * Chiude un'asta, imposta lo stato a 'closed' e seleziona il vincitore
  */
-export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+/*export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const auctionId = parseInt(req.params.id);
     const userId = req.user?.id;
@@ -192,6 +192,15 @@ export const closeAuction = async (req: AuthRequest, res: Response): Promise<voi
 
     if (participation) {
       participation.isWinner = true;
+
+      // Riduci solo il credito del vincitore in base al prezzo finale
+      const winnerWallet = await Wallet.findOne({ where: { userId: topBid.userId } });
+      if (winnerWallet) {
+        const rimborso = Number(auction.maxPrice) - Number(topBid.amount);
+        winnerWallet.balance += rimborso; // Rimborsa la differenza
+        await winnerWallet.save();
+      }
+
       await participation.save();
     }
 
@@ -216,7 +225,111 @@ export const closeAuction = async (req: AuthRequest, res: Response): Promise<voi
     console.error('Errore chiusura asta:', error);
     res.status(500).json({ message: 'Errore interno del server' });
   }
+};*/
+
+// Funzione per chiudere un'asta
+// Permette di chiudere un'asta e selezionare il vincitore
+// Solo gli utenti con ruolo 'admin' o 'bid-creator' possono chiudere un'asta
+// Richiede autenticazione JWT
+// Questa funzione chiude l'asta, seleziona il vincitore e rimborsa gli altri partecipanti
+// Se l'asta è già chiusa o non è nello stato 'bidding', restituisce un errore
+// Se non ci sono offerte valide, restituisce un errore 
+export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const auctionId = parseInt(req.params.id);
+    const userId = req.user?.id;
+
+    const auction = await Auction.findByPk(auctionId);
+    if (!auction) {
+      res.status(404).json({ message: 'Asta non trovata' });
+      return;
+    }
+
+    if (auction.status === 'closed') {
+      res.status(400).json({ message: 'L\'asta è già chiusa' });
+      return;
+    }
+
+    if (auction.status !== 'bidding') {
+      res.status(400).json({ message: 'L\'asta deve essere nello stato "bidding" per essere chiusa' });
+      return;
+    }
+
+    // Trova il bid vincente (più alto)
+    const topBid = await Bid.findOne({
+      where: { auctionId },
+      order: [['amount', 'DESC'], ['createdAt', 'ASC']],
+    });
+
+    if (!topBid) {
+      res.status(400).json({ message: 'Nessuna offerta valida trovata' });
+      return;
+    }
+
+    const finalAmount = Number(topBid.amount);
+    const maxPrice = Number(auction.maxPrice);
+
+    // Rimborsa il vincitore della differenza tra maxPrice e prezzo finale
+    const winnerWallet = await Wallet.findOne({ where: { userId: topBid.userId } });
+    if (winnerWallet) {
+      const refund = maxPrice - finalAmount;
+      winnerWallet.balance += refund;
+      await winnerWallet.save();
+    }
+
+    // Imposta il partecipante vincente
+    const winnerParticipation = await Participation.findOne({
+      where: { auctionId, userId: topBid.userId },
+    });
+
+    if (winnerParticipation) {
+      winnerParticipation.isWinner = true;
+      await winnerParticipation.save();
+    }
+
+    // Rimborsa tutti gli altri partecipanti validi
+    const participants = await Participation.findAll({
+      where: {
+        auctionId,
+        isValid: true,
+      },
+    });
+
+    for (const participant of participants) {
+      if (participant.userId !== topBid.userId) {
+        const wallet = await Wallet.findOne({ where: { userId: participant.userId } });
+        if (wallet) {
+          wallet.balance += maxPrice; // Rimborso totale per chi non ha vinto
+          await wallet.save();
+        }
+      }
+    }
+
+    // [TODO] Opzionale: Accreditare il finalAmount al creatore dell’asta
+
+    // Chiudi l'asta
+    auction.status = 'closed';
+    await auction.save();
+
+    // Notifica via WebSocket
+    broadcastToAuction(auctionId, {
+      type: 'auction_closed',
+      winnerId: topBid.userId,
+      finalAmount: topBid.amount,
+    });
+
+    // Risposta finale
+    res.status(200).json({
+      message: 'Asta chiusa con successo',
+      winnerId: topBid.userId,
+      finalAmount: topBid.amount,
+    });
+  } catch (error) {
+    console.error('Errore chiusura asta:', error);
+    res.status(500).json({ message: 'Errore interno del server' });
+  }
 };
+
 
 // Funzione per aggiornare lo stato di un'asta
 // Permette di aggiornare lo stato di un'asta (created, open, bidding, closed)

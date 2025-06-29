@@ -6,6 +6,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import authRoutes from "./routes/auth";
 import auctionRoutes from "./routes/auction";
 import bidRoutes from './routes/bid';
+import walletRoutes from './routes/wallet';
 
 // Inizializza app Express
 const app = express();
@@ -18,6 +19,8 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/auction", auctionRoutes);
 app.use('/auction', bidRoutes);
+app.use('/wallet', walletRoutes);
+
 
 // Test route
 app.get("/", (_, res) => {res.send("🚀 API AuctionSnap avviata!")});
