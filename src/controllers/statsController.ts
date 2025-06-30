@@ -38,20 +38,19 @@ export const getAuctionStats = async (req: Request, res: Response): Promise<void
     //Calcola le statistiche
     let completedCount = 0;
     let cancelledCount = 0;
+    const totalBidsEffettuate = bids.length;
+    let totalBidsMassime = 0
     //let ratioSum = 0;
     //let ratioCount = 0;
 
     for (const auction of Auctions) {
       if (auction.status === 'closed') {
         completedCount++;
-      }// else if (auction.status === 'cancelled') {
-        //cancelledCount++;
-      //}
-
-    const totalBidsEffettuate = bids.length;
-    const totalBidsMassime = Auctions.reduce((acc, a) => {
-      return acc + a.maxParticipants * a.bidsPerParticipant;
-    }, 0);
+      } else if (auction.status === 'cancelled') {
+        cancelledCount++;
+      }
+       totalBidsMassime += auction.maxParticipants * auction.bidsPerParticipant;
+    }
 
     const averageBidRatio = totalBidsMassime > 0 ? totalBidsEffettuate / totalBidsMassime : 0;
 
@@ -62,7 +61,6 @@ export const getAuctionStats = async (req: Request, res: Response): Promise<void
       asteAnnullate: cancelledCount,
       mediaRapportoPuntate: averageBidRatio.toFixed(2),
     });
-    }
     } catch (error) {
     console.error('Errore durante il recupero delle statistiche delle aste:', error);
     res.status(500).json({ message: 'Errore interno del server' });
