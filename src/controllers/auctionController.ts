@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuthRequest } from '../middlewares/authMiddleware';
+import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { Auction } from '../models/Auction';
 import { Participation } from '../models/Participation';
 import { Wallet } from '../models/Wallet'; 

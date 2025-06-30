@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Wallet } from '../models/Wallet';
-import { AuthRequest } from '../middlewares/authMiddleware';
+import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 
 // Ottieni il saldo del wallet dell'utente autenticato
 // Richiede autenticazione JWT
