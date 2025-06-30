@@ -468,13 +468,18 @@ export const getAuctionHistory = async (req: Request, res: Response): Promise<vo
             }]
         });
 
+        const auction = await Auction.findAll({
+            where: { id: participations.map(p => p.auctionId) },
+            attributes: ['id', 'title', 'status', 'startTime', 'endTime'],
+        });
+
         // Prepara i dati per la risposta
         const history = participations.map(p => ({
             auctionId: p.auctionId,
-            //title: p.auction.title,
-            //status: p.auction.status,
-            //startTime: p.auction.startTime,
-            //endTime: p.auction.endTime,
+            title: auction.find(a => a.id === p.auctionId)?.title,
+            status: auction.find(a => a.id === p.auctionId)?.status,
+            startTime: auction.find(a => a.id === p.auctionId)?.startTime,
+            endTime: auction.find(a => a.id === p.auctionId)?.endTime,
             isWinner: p.isWinner,
         }));
 
@@ -485,7 +490,7 @@ export const getAuctionHistory = async (req: Request, res: Response): Promise<vo
             res.setHeader('Content-Disposition', 'attachment; filename="auction-history.pdf"');
             doc.text('Storico aste');
             history.forEach(item => {
-                doc.text(`Asta: ${item.auctionId} | Stato:  | Vincitore: ${item.isWinner ? 'Sì' : 'No'}`);
+                doc.text(`Asta: ${item.auctionId} | Stato: ${item.status} | Vincitore: ${item.isWinner ? 'Sì' : 'No'}`);
             });
             doc.end();
             doc.pipe(res);

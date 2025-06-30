@@ -5,22 +5,21 @@ import { Op } from 'sequelize';
 
 export const getAuctionStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { startDate, endDate } = req.query;
+    const { from, to } = req.query;
+    console.log('FROM:', from, 'TO:', to);
+
 
     // Costruisci i filtri per le date
     const dateFilter: any = {};
-    if (startDate) {
-      dateFilter[Op.gte] = new Date(startDate as string);
-    }
-    if (endDate) {
-      dateFilter[Op.lte] = new Date(endDate as string);
+    if (from || to) {
+           dateFilter.createdAt = {};
+            if (from) dateFilter.createdAt[Op.gte] = new Date(from as string);
+            if (to) dateFilter.createdAt[Op.lte] = new Date(to as string);
     }
 
     // Ottieni le aste chiuse nel periodo specificato
     const Auctions = await Auction.findAll({
-      where: {
-        endTime: dateFilter,
-      },
+      where: dateFilter,
       include: [{
         model: Bid,
         attributes: ['amount'],
@@ -54,9 +53,9 @@ export const getAuctionStats = async (req: Request, res: Response): Promise<void
 
     const averageBidRatio = totalBidsMassime > 0 ? totalBidsEffettuate / totalBidsMassime : 0;
 
-
+    
     res.json({
-      intervallo: { startDate, endDate },
+      intervallo: { from, to },
       asteCompletate: completedCount,
       asteAnnullate: cancelledCount,
       mediaRapportoPuntate: averageBidRatio.toFixed(2),

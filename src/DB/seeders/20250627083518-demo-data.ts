@@ -89,7 +89,7 @@ export default {
         maxPrice: 1000,
         minIncrement: 10,
         bidsPerParticipant: 3,
-        status: 'closed',
+        status: 'cancelled',
         startTime: new Date(),
         endTime: new Date(Date.now() + 3600000),
         relaunchTime: 5,
