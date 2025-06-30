@@ -5,23 +5,37 @@ import { Participation } from '../models/Participation';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 
+/**
+ * Funzione per piazzare un'offerta
+ * Questa funzione gestisce la logica per piazzare un'offerta in un'asta.
+ * Controlla se l'asta è nello stato "bidding", se l'utente
+ * ha partecipato all'asta, se ha ancora offerte disponibili,
+ * e se l'offerta è valida rispetto al prezzo minimo e massimo.
+ * @param req 
+ * @param res 
+ * @returns 
+ */
 export const placeBid = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const auctionId = parseInt(req.params.id);
     const userId = req.user?.id;
 
     const auction = await Auction.findByPk(auctionId);
+    // Controlla se l'asta esiste
     if (!auction) {
       res.status(404).json({ message: 'Asta non trovata' });
       return;
     }
 
+    // Controlla se l'asta è nello stato 'bidding'
     if (auction.status !== 'bidding') {
       res.status(400).json({ message: 'L\'asta non è nello stato "bidding"' });
       return;
     }
 
+    
     const participation = await Participation.findOne({ where: { auctionId, userId, isValid: true } });
+    // Controlla se l'utente ha partecipato all'asta
     if (!participation) {
       res.status(403).json({ message: 'Non hai partecipato a questa asta' });
       return;
@@ -46,11 +60,27 @@ export const placeBid = async (req: AuthRequest, res: Response): Promise<void> =
     // prezzo offerto dall'utente
     const { amount } = req.body;
 
-    if (!amount || isNaN(amount) || Number(amount) < minValid) {
+    // Controlla se l'importo è valido
+    if (!amount || isNaN(amount)) {
+      res.status(400).json({ message: 'Importo offerta non valido' });
+      return;
+    }
+
+    const amountNum = Number(amount);
+
+    // Controlla se l'importo è inferiore al minimo valido
+    if (amountNum < minValid) {
       res.status(400).json({ message: `L'offerta deve essere almeno di ${minValid}` });
       return;
     }
 
+    // Controlla se l'importo supera il prezzo massimo dell'asta
+    if (amountNum > Number(auction.maxPrice)) {
+      res.status(400).json({ message: `L'offerta non può superare il prezzo massimo di ${auction.maxPrice}` });
+      return;
+    }
+
+    // Controlla se l'utente è autenticato
     if (!userId) {
         res.status(401).json({ message: 'Utente non autenticato' });
     return;
@@ -65,11 +95,14 @@ export const placeBid = async (req: AuthRequest, res: Response): Promise<void> =
     const endTime = new Date(auction.endTime).getTime();
     const timeLeft = endTime - now;
 
+    // Se il tempo rimasto è inferiore al tempo di rilancio, estendi l'asta
+    // e notifica i client
     if (timeLeft <= auction.relaunchTime * 1000) {
       // estendi asta
       auction.endTime = new Date(now + auction.relaunchTime * 1000);
       await auction.save();
 
+      
       broadcastToAuction(auctionId, {
         type: 'extended',
         newEndTime: auction.endTime,
