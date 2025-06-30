@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth";
 import auctionRoutes from "./routes/auction";
 import bidRoutes from './routes/bid';
 import walletRoutes from './routes/wallet';
+import statsRoutes from './routes/stats';
 
 // Inizializza app Express
 const app = express();
@@ -20,7 +21,8 @@ app.use("/auth", authRoutes);
 app.use("/auction", auctionRoutes);
 app.use('/auction', bidRoutes);
 app.use('/wallet', walletRoutes);
-app.use('/api', auctionRoutes)
+app.use('/api', auctionRoutes);
+app.use('/stats', statsRoutes);
 
 
 // Test route
