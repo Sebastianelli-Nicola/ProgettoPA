@@ -20,6 +20,7 @@ app.use("/auth", authRoutes);
 app.use("/auction", auctionRoutes);
 app.use('/auction', bidRoutes);
 app.use('/wallet', walletRoutes);
+app.use('/api', auctionRoutes)
 
 
 // Test route

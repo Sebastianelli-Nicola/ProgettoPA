@@ -5,6 +5,8 @@ import { Participation } from '../models/Participation';
 import { Wallet } from '../models/Wallet'; 
 import { Bid } from '../models/Bid';
 import { broadcastToAuction } from '../websocket/websockethandlers';
+import { Op } from 'sequelize';
+import PDFDocument from 'pdfkit';
 
 // Estendi l'interfaccia Request per includere 'user'
 declare global {
@@ -430,3 +432,71 @@ export const startAuction = async (req: any, res: any): Promise<void> => {
   }
 };
 
+
+export const getAuctionHistory = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user.id;
+        const { from, to, format } = req.query;
+
+         if (!userId) {
+           res.status(401).json({ message: 'Utente non autenticato' });
+           return;
+         }
+
+         //Validazione date
+         if (from && isNaN(Date.parse(from as string))) {
+           res.status(400).json({ message: 'Parametro "from" non è una data valida' });
+           return;
+         }
+         if (to && isNaN(Date.parse(to as string))) {
+           res.status(400).json({ message: 'Parametro "to" non è una data valida' });
+           return;
+     }
+
+        // Costruisci il filtro per il range temporale
+        const where: any = {};
+        if (from || to) {
+            where.createdAt = {};
+            if (from) where.createdAt[Op.gte] = new Date(from as string);
+            if (to) where.createdAt[Op.lte] = new Date(to as string);
+        }
+
+        // Trova tutte le partecipazioni dell'utente
+        const participations = await Participation.findAll({
+            where: { userId },
+            include: [{
+                model: Auction,
+                where,
+            }]
+        });
+
+        // Prepara i dati per la risposta
+        const history = participations.map(p => ({
+            auctionId: p.auctionId,
+            //title: p.auction.title,
+            //status: p.auction.status,
+            //startTime: p.auction.startTime,
+            //endTime: p.auction.endTime,
+            isWinner: p.isWinner,
+        }));
+
+        if (format === 'pdf') {
+            // Esporta in PDF
+            const doc = new PDFDocument();
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="auction-history.pdf"');
+            doc.text('Storico aste');
+            history.forEach(item => {
+                doc.text(`Asta: ${item.auctionId} | Stato:  | Vincitore: ${item.isWinner ? 'Sì' : 'No'}`);
+            });
+            doc.end();
+            doc.pipe(res);
+        } else {
+            // Esporta in JSON
+            res.json({ history });
+        }
+    } catch (error) {
+       console.error('Errore recupero storico aste:', error);
+       res.status(500).json({ message: 'Errore interno del server' });  
+     }
+};

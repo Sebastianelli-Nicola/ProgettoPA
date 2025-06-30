@@ -14,7 +14,8 @@ interface ParticipationAttributes {
     updatedAt?: Date; // timestamp di aggiornamento
 }
 
-type ParticipationCreationAttributes = Omit<ParticipationAttributes, 'id' | 'isWinner' | 'isValid'>;    
+type ParticipationCreationAttributes = Omit<ParticipationAttributes, 'id' | 'isWinner' | 'isValid'>;
+//type ParticipationInstance = Model<ParticipationAttributes> & { Auction: Auction; };
 
 export class Participation extends Model<ParticipationAttributes, ParticipationCreationAttributes> implements ParticipationAttributes {
   public id!: number;
