@@ -379,7 +379,7 @@ export const startAuction = async (req: any, res: any): Promise<void> => {
     // Se il numero di partecipanti è inferiore al minimo richiesto, chiude l'asta
     // e notifica i client
     if (partecipanti < auction.minParticipants) {
-      auction.status = 'closed';
+      auction.status = 'cancelled';
       await auction.save({ transaction });
 
       await transaction.commit();
@@ -396,6 +396,7 @@ export const startAuction = async (req: any, res: any): Promise<void> => {
       res.status(200).json({ message: 'Asta chiusa per partecipanti insufficienti' });
       return;
     }
+
 
     auction.status = 'bidding';
     await auction.save({ transaction });
@@ -420,7 +421,16 @@ export const startAuction = async (req: any, res: any): Promise<void> => {
 };
 
 
-
+/**
+ * Funzione per recuperare lo storico delle aste di un utente
+ * Permette di recuperare lo storico delle aste a cui l'utente ha partecipato
+ * Richiede autenticazione JWT
+ * Controlla se l'utente è autenticato
+ *
+ * @param req 
+ * @param res 
+ * @returns 
+ */
 export const getAuctionHistory = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
@@ -488,3 +498,5 @@ export const getAuctionHistory = async (req: Request, res: Response): Promise<vo
        res.status(500).json({ message: 'Errore interno del server' });  
      }
 };
+
+

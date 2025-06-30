@@ -35,7 +35,7 @@ export = {
       minIncrement: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       bidsPerParticipant: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
       status: {
-        type: DataTypes.ENUM('created', 'open', 'bidding', 'closed'),
+        type: DataTypes.ENUM('created', 'open', 'bidding', 'closed', 'cancelled'),
         defaultValue: 'created'
       },
       startTime: { type: DataTypes.DATE, allowNull: false },

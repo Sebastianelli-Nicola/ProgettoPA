@@ -11,7 +11,7 @@ interface AuctionAttributes {
     maxPrice: number; //prezzo massimo dell'asta
     minIncrement: number; //incremento minimo dell'asta
     bidsPerParticipant: number; //numero di puntate disponibili per partecipante
-    status: 'created' | 'open' | 'bidding' | 'closed';
+    status: 'created' | 'open' | 'bidding' | 'closed' | 'cancelled'; //stato dell'asta
     startTime: Date;
     endTime: Date;
     relaunchTime: number; //durata della fase rilancio in minuti
@@ -30,7 +30,7 @@ export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes>
     public maxPrice!: number;
     public minIncrement!: number;
     public bidsPerParticipant!: number;
-    public status!: 'created' | 'open' | 'bidding' | 'closed';
+    public status!: 'created' | 'open' | 'bidding' | 'closed' | 'cancelled'; // stato dell'asta
     public startTime!: Date;
     public endTime!: Date;
     public relaunchTime!: number;
