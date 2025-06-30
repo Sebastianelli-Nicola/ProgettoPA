@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAuctionStats } from '../controllers/statsController';
+import { getAuctionStats, getUserExpenses } from '../controllers/statsController';
 import { authenticateJWT, authorizeRoles } from '../middlewares/authMiddleware';
 
 const router = Router();
@@ -10,5 +10,7 @@ router.get(
   authorizeRoles('admin'),
   getAuctionStats
 );
+
+router.get('/expenses', authenticateJWT, authorizeRoles('bid-participant'), getUserExpenses);
 
 export default router;
