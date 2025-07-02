@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuthRequest } from '../middlewares/authMiddleware';
+import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 import { BidDAO } from '../dao/bidDAO'; // Importa il DAO per le offerte
 

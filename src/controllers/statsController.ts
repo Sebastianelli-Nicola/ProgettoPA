@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuthRequest } from '../middlewares/authMiddleware';
+import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { Auction } from '../models/Auction';
 import { Participation } from '../models/Participation';
 import { Bid } from '../models/Bid';
@@ -27,7 +27,7 @@ export const getUserExpenses = async (req: Request, res: Response): Promise<void
     const userId = req.user?.id;
     //const role = req.user?.role;
     const { from, to } = req.query;
-    
+
     // Validazione date
     //const dateFilter: any = {};
     if (!userId) {
