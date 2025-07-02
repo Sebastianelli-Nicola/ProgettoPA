@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Bid } from '../models/Bid';
 import { Auction } from '../models/Auction';
 import { Participation } from '../models/Participation';
-import { AuthRequest } from '../middlewares/authMiddleware';
+import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 
 /**
