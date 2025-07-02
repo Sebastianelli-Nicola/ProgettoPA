@@ -27,32 +27,22 @@ export class ParticipationDAO {
     return Participation.findAll({ where: { auctionId, isValid: true }, transaction });
   }
 
-  async findAllByUserWithDate(userId: number, from?: Date, to?: Date, transaction?: Transaction) {
-  const where: any = { userId };
-  if (from || to) {
-    where.createdAt = {};
-    if (from) where.createdAt[Op.gte] = from;
-    if (to) where.createdAt[Op.lte] = to;
-  }
-  return Participation.findAll({ where, transaction });
-}
-
-async findAllByUserWithDateAndAuction(
-    userId: number,
-    from?: string,
-    to?: string,
-    transaction?: Transaction
-  ) {
-    const where: any = { userId, isValid: true };
-    if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt[Op.gte] = new Date(from);
-      if (to) where.createdAt[Op.lte] = new Date(to);
+  async findAllByUserWithDateAndAuction(
+      userId: number,
+      from?: Date,
+      to?: Date,
+      transaction?: Transaction
+    ) {
+      const where: any = { userId, isValid: true };
+      if (from || to) {
+        where.createdAt = {};
+        if (from) where.createdAt[Op.gte] = from;
+        if (to) where.createdAt[Op.lte] = to;
+      }
+      return Participation.findAll({
+        where,
+        include: [Auction],
+        transaction,
+      });
     }
-    return Participation.findAll({
-      where,
-      include: [Auction],
-      transaction,
-    });
-  }
 }

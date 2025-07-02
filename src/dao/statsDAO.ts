@@ -2,6 +2,7 @@ import { Auction } from '../models/Auction';
 import { Bid } from '../models/Bid';
 import { ParticipationDAO } from '../dao/participationDAO';
 import { Op } from 'sequelize';
+import { AuctionDAO } from './auctionDAO';
 
 export class StatsDAO {
   async findAuctionsWithBids(dateFilter: any) {
@@ -24,7 +25,7 @@ export class StatsDAO {
     });
   }
 
-  async findParticipations(userId: number, from?: string, to?: string) {
+  async findParticipations(userId: number, from?: Date, to?: Date) {
     const participationDAO = new ParticipationDAO();
     return participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
   }
@@ -35,6 +36,45 @@ export class StatsDAO {
       order: [['amount', 'DESC']],
     });
   }
+
+  // async getAuctionHistory(userId: number, from?: Date, to?: Date) {
+  //   const whereAuction: any = { userId };
+  //   if (from || to) {
+  //     whereAuction.createdAt = {};
+  //     if (from) whereAuction.createdAt[Op.gte] = new Date(from as Date);
+  //     if (to) whereAuction.createdAt[Op.lte] = new Date(to as Date);
+  //   }
+  //   return Auction.findAll({
+  //     where: whereAuction,
+  //     order: [['createdAt', 'DESC']],
+  //   });
+  // }
+
+  async getAuctionHistory(userId: number, from?: Date, to?: Date) {
+    const participationDAO = new ParticipationDAO();
+    const participations = await participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
+
+    const auctionIds = participations.map(p => p.auctionId);
+
+    const auctionDAO = new AuctionDAO();
+    const auctions = await auctionDAO.findAllClosed(auctionIds);
+
+    const participationMap = new Map<number, any>();
+    participations.forEach(p => participationMap.set(p.auctionId, p));
+
+    // Arricchisci ogni asta con info se è stata aggiudicata dall'utente
+    const history = auctions.map(a => ({
+      ...a.toJSON(),
+      isWinner: participationMap.get(a.id)?.isWinner || false
+    }));
+
+    // Dividi tra aste aggiudicate e non aggiudicate
+    const won = history.filter(a => a.isWinner);
+    const lost = history.filter(a => !a.isWinner);
+
+    return { won, lost };
+  }
+
 }
 
 // import { Auction } from '../models/Auction';

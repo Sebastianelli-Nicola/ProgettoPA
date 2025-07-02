@@ -29,18 +29,15 @@ export class AuctionDAO {
     return auction.save({ transaction });
   }
 
-  async getAuctionHistory(userId: number, from?: Date, to?: Date) {
-    const whereAuction: any = { userId };
-    if (from || to) {
-      whereAuction.createdAt = {};
-      if (from) whereAuction.createdAt[Op.gte] = new Date(from as Date);
-      if (to) whereAuction.createdAt[Op.lte] = new Date(to as Date);
-    }
-    return Auction.findAll({
-      where: whereAuction,
-      order: [['createdAt', 'DESC']],
-    });
+  async findAllClosed(auctionIds: number[]): Promise<Auction[]> {
+    return Auction.findAll(
+      { where: {
+        id: { [Op.in]: auctionIds },
+        status: 'closed' // Prendi solo le aste chiuse
+      }, order: [['createdAt', 'DESC']] });
   }
+
+  
 }
 
 /*import { Auction, AuctionCreationAttributes } from '../models/Auction';

@@ -27,6 +27,7 @@ export class StatsService {
     }
 
     const averageBidRatio = totalBidsMassime > 0 ? totalBidsEffettuate / totalBidsMassime : 0;
+    console.log( 'Total Bids Effettuate:', totalBidsEffettuate, 'Total Bids Massime:', totalBidsMassime, 'Average Bid Ratio:' , averageBidRatio );
 
     return {
       intervallo: { from, to },
@@ -36,7 +37,7 @@ export class StatsService {
     };
   }
 
-  async getUserExpenses(userId: number, from?: string, to?: string) {
+  async getUserExpenses(userId: number, from?: Date, to?: Date) {
     const participations = await this.statsDAO.findParticipations(userId, from, to);
 
     let totalFees = 0;
@@ -59,4 +60,9 @@ export class StatsService {
       to: to || null,
     };
   }
+
+  async getAuctionHistory(userId: number, from?: Date, to?: Date) {
+    return this.statsDAO.getAuctionHistory(userId, from, to);
+  }
+  
 }

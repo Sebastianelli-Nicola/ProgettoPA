@@ -74,7 +74,7 @@ export class AuctionService {
         await this.walletDAO.save(winnerWallet, transaction);
       }
 
-      const winnerParticipation = await this.participationDAO.findParticipation(auctionId, topBid.userId, transaction);
+      const winnerParticipation = await this.participationDAO.findParticipation(topBid.userId, auctionId, transaction);
       if (winnerParticipation) {
         winnerParticipation.isWinner = true;
         await this.participationDAO.saveParticipation(winnerParticipation, transaction);
@@ -85,7 +85,7 @@ export class AuctionService {
         if (participant.userId !== topBid.userId) {
           const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
           if (wallet) {
-            wallet.balance += +maxPrice + +auction.entryFee;
+            wallet.balance += +maxPrice;
             await this.walletDAO.save(wallet, transaction);
           }
         }
@@ -116,10 +116,21 @@ export class AuctionService {
       if (auction.status !== 'open') throw { status: 400, message: 'Asta non nello stato open' };
 
       const partecipanti = await this.participationDAO.countValidByAuction(auctionId, transaction);
+      const maxPrice = Number(auction.maxPrice);
 
       if (partecipanti < auction.minParticipants) {
         auction.status = 'cancelled';
         await this.auctionDAO.save(auction, transaction);
+        const participants = await this.participationDAO.findValidParticipants(auctionId, transaction);
+
+        for (const participant of participants) {
+            const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
+            if (wallet) {
+              wallet.balance += +maxPrice + +auction.entryFee;
+              await this.walletDAO.save(wallet, transaction);
+            }
+        }
+
         return { closed: true, reason: 'Partecipanti insufficienti' };
       }
 
@@ -129,7 +140,5 @@ export class AuctionService {
     });
   }
 
-  async getAuctionHistory(userId: number, from?: Date, to?: Date) {
-    return this.auctionDAO.getAuctionHistory(userId, from, to);
-  }
+  
 }

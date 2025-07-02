@@ -140,50 +140,7 @@ export const startAuction = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
-// Funzione per recuperare lo storico delle aste di un utente
-export const getAuctionHistory = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const userId = req.user?.id;
-    const { from, to, format } = req.query;
 
-    if (!userId) {
-      res.status(401).json({ message: 'Utente non autenticato' });
-      return;
-    }
-
-    if (from && isNaN(Date.parse(from as string))) {
-      res.status(400).json({ message: 'Parametro "from" non è una data valida' });
-      return;
-    }
-    if (to && isNaN(Date.parse(to as string))) {
-      res.status(400).json({ message: 'Parametro "to" non è una data valida' });
-      return;
-    }
-
-    const history = await auctionService.getAuctionHistory(
-      userId,
-      from ? new Date(from as string) : undefined,
-      to ? new Date(to as string) : undefined
-    );
-
-    /*if (format === 'pdf') {
-      const doc = new PDFDocument();
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="auction-history.pdf"');
-      doc.text('Storico aste');
-      history.forEach(item => {
-        doc.text(`Asta: ${item.id} | Stato: ${item.status} | Vincitore: ${item.isWinner ? 'Sì' : 'No'}`);
-      });
-      doc.end();
-      doc.pipe(res);
-    } else {
-      res.json({ history });
-    }*/
-  } catch (error) {
-    console.error('Errore recupero storico aste:', error);
-    res.status(500).json({ message: 'Errore interno del server' });
-  }
-};
 
 
 // import { Request, Response } from 'express';
