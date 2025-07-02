@@ -1,14 +1,8 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import { Auction } from '../models/Auction';
-import { Participation } from '../models/Participation';
-import { Wallet } from '../models/Wallet'; 
-import { Bid } from '../models/Bid';
 import { broadcastToAuction } from '../websocket/websockethandlers';
-import { Op } from 'sequelize';
 import PDFDocument from 'pdfkit';
-import { getSequelizeInstance } from '../DB/sequelize';
-import { log } from 'console';
+import { AuctionDAO } from '../dao/auctionDAO'
 
 // Estendi l'interfaccia Request per includere 'user'
 declare global {
@@ -47,7 +41,8 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const newAuction = await Auction.create({
+    const auctionDAO = new AuctionDAO();
+    const newAuction = await auctionDAO.create({
       title,
       minParticipants,
       maxParticipants,
@@ -73,16 +68,8 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
 export const getAuctions = async (req: Request, res: Response): Promise<void> => {
   try {
     const { status } = req.query;
-
-    // Ensure status is a string and matches allowed values
-    const allowedStatuses = ['created', 'open', 'bidding', 'closed'];
-    const statusStr = typeof status === 'string' && allowedStatuses.includes(status) ? status : undefined;
-    const whereClause = statusStr ? { status: statusStr } : undefined;
-
-    const auctions = await Auction.findAll({
-      where: whereClause,
-      order: [['createdAt', 'DESC']],
-    });
+    const auctionDAO = new AuctionDAO();
+    const auctions = await auctionDAO.getAuctions(typeof status === 'string' ? status : undefined);
 
     res.json(auctions);
   } catch (error) {
@@ -104,76 +91,20 @@ export const getAuctions = async (req: Request, res: Response): Promise<void> =>
  * @returns 
  */
 export const joinAuction = async (req: Request, res: Response): Promise<void> => {
-  
-
-  // Inizializza la transazione
-  const sequelize = getSequelizeInstance();
-  const t = await sequelize.transaction();
   try {
     const userId = (req.user as any).id;
     const auctionId = req.body.auctionId;
-    
-    // Controlla se l'astaId è valido
-    const auction = await Auction.findByPk(auctionId, { transaction: t });
-    if (!auction) {
-      await t.rollback();
-      res.status(404).json({ message: 'Asta non trovata' });
-      return;
+
+    const auctionDAO = new AuctionDAO();
+    const result = await auctionDAO.joinAuction(userId, auctionId);
+    res.status(200).json(result);
+  } catch (err: any) {
+    if (err.status) {
+      res.status(err.status).json({ message: err.message });
+    } else {
+      console.error('Errore iscrizione:', err);
+      res.status(500).json({ message: 'Errore interno' });
     }
-
-    // Controlla lo stato dell'asta
-    if (auction.status !== 'open') {
-      await t.rollback();
-      res.status(400).json({ message: 'L\'asta non è aperta per le iscrizioni' });
-      return;
-    }
-
-    // Controlla il numero di partecipanti
-    const count = await Participation.count({ where: { auctionId }, transaction: t });
-    if (count >= auction.maxParticipants) {
-      await t.rollback();
-      res.status(400).json({ message: 'Numero massimo di partecipanti raggiunto' });
-      return;
-    }
-
-
-    // Controlla se l'utente ha un wallet valido
-    const wallet = await Wallet.findOne({ where: { userId }, transaction: t });
-    if (!wallet) {
-      await t.rollback();
-      res.status(404).json({ message: 'Wallet non trovato' });
-      return;
-    }
-
-    // Controlla se l'utente ha abbastanza credito
-    const costoTotale = +auction.entryFee + +auction.maxPrice;
-    log('Costo totale:', costoTotale);
-    if (wallet.balance < costoTotale) {
-      await t.rollback();
-      res.status(400).json({ message: 'Credito insufficiente' });
-      return;
-    }
-
-    // Controlla se l'utente è già iscritto all'asta
-    const existing = await Participation.findOne({ where: { userId, auctionId }, transaction: t });
-    if (existing) {
-      await t.rollback();
-      res.status(400).json({ message: 'Utente già iscritto' });
-      return;
-    }
-
-    // Registra la partecipazione
-    await Participation.create({ userId, auctionId, fee: auction.entryFee }, { transaction: t });
-    wallet.balance -= costoTotale;
-    // Aggiorna il saldo del wallet
-    await wallet.save({ transaction: t });
-
-    await t.commit();
-    res.status(200).json({ message: 'Partecipazione registrata con successo' });
-  } catch (err) {
-    await t.rollback();
-    console.error('Errore iscrizione:', err);
-    res.status(500).json({ message: 'Errore interno' });
   }
 };
 
@@ -192,114 +123,30 @@ export const joinAuction = async (req: Request, res: Response): Promise<void> =>
  * @returns 
  */
 export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
-  const sequelize = getSequelizeInstance();
-  const t = await sequelize.transaction();
-
-  try {
+   try {
     const auctionId = parseInt(req.params.id);
-    const auction = await Auction.findByPk(auctionId, { transaction: t });
-
-    // Controlla se l'asta esiste
-    if (!auction) {
-      await t.rollback();
-      res.status(404).json({ message: 'Asta non trovata' });
-      return;
-    }
-
-    // Controlla se l'asta è nello stato 'bidding'
-    if (auction.status !== 'bidding') {
-      await t.rollback();
-      res.status(400).json({ message: 'L\'asta non è nello stato "bidding"' });
-      return;
-    }
-
-    // Controlla se ci sono offerte valide
-    const topBid = await Bid.findOne({
-      where: { auctionId },
-      order: [['amount', 'DESC'], ['createdAt', 'ASC']],
-      transaction: t
-    });
-
-    // Se non ci sono offerte valide, restituisce un errore
-    // Se non ci sono offerte, restituisce un errore
-    if (!topBid) {
-      await t.rollback();
-      res.status(400).json({ message: 'Nessuna offerta valida trovata' });
-      return;
-    }
-
-    const finalAmount = Number(topBid.amount);
-    const maxPrice = Number(auction.maxPrice);
-
-  
-    const winnerWallet = await Wallet.findOne({ where: { userId: topBid.userId }, transaction: t });
-    // Controlla se il wallet del vincitore esiste
-    if (winnerWallet) {
-      const refund = maxPrice - finalAmount;
-      winnerWallet.balance += refund;
-      await winnerWallet.save({ transaction: t });
-    }
-
-    // Segna il vincitore nella partecipazione
-    // Trova la partecipazione del vincitore
-    const winnerParticipation = await Participation.findOne({
-      where: { auctionId, userId: topBid.userId },
-      transaction: t
-    });
-
-    // Se la partecipazione del vincitore esiste, segna come vincitore
-    // Se non esiste, non fa nulla
-    if (winnerParticipation) {
-      winnerParticipation.isWinner = true;
-      await winnerParticipation.save({ transaction: t });
-    }
-
-    // Rimborsa tutti gli altri partecipanti validi
-    const participants = await Participation.findAll({
-      where: { auctionId, isValid: true },
-      transaction: t
-    });
-
-    // Rimborsa tutti i partecipanti che non sono il vincitore
-    // Per ogni partecipante, se non è il vincitore, rimborsa l'importo totale
-    // (maxPrice + entryFee)
-    for (const participant of participants) {
-      if (participant.userId !== topBid.userId) {
-        const wallet = await Wallet.findOne({ where: { userId: participant.userId }, transaction: t });
-        if (wallet) {
-          wallet.balance += +maxPrice + +auction.entryFee; // Rimborso totale per chi non ha vinto
-          await wallet.save({ transaction: t });
-        }
-      }
-    }
-
-    // Chiude l'asta
-    auction.status = 'closed';
-    await auction.save({ transaction: t });
-
-    await t.commit();
+    const auctionDAO = new AuctionDAO();
+    const result = await auctionDAO.closeAuction(auctionId);
 
     // Notifica ai client che l'asta è chiusa e il vincitore
-    // Invia un messaggio a tutti i client connessi che sono iscritti all'asta
-    // broadcastToAuction è una funzione che invia un messaggio a tutti i client connessi
-    // che sono iscritti all'asta specificata
     broadcastToAuction(auctionId, {
       type: 'auction_closed',
-      winnerId: topBid.userId,
-      finalAmount: topBid.amount,
+      winnerId: result.winnerId,
+      finalAmount: result.finalAmount,
     });
 
-    // Risponde con un messaggio di successo
-    // Risponde con un messaggio di successo e i dettagli del vincitore
     res.status(200).json({
       message: 'Asta chiusa con successo',
-      winnerId: topBid.userId,
-      finalAmount: topBid.amount,
+      winnerId: result.winnerId,
+      finalAmount: result.finalAmount,
     });
-  } catch (error) {
-    await t.rollback();
-    console.error('Errore chiusura asta:', error);
-    res.status(500).json({ message: 'Errore interno del server' });
+  } catch (error: any) {
+    if (error.status) {
+      res.status(error.status).json({ message: error.message });
+    } else {
+      console.error('Errore chiusura asta:', error);
+      res.status(500).json({ message: 'Errore interno del server' });
+    }
   }
 };
 
@@ -314,26 +161,18 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response): Prom
     const auctionId = parseInt(req.params.id);
     const { status } = req.body;
 
-    const validStatuses = ['created', 'open', 'bidding', 'closed'];
-
-    if (!validStatuses.includes(status)) {
-      res.status(400).json({ message: 'Stato non valido. Ammessi: created, open, bidding, closed' });
-      return;
+  //   
+  
+  const auctionDAO = new AuctionDAO();
+  const auction = await auctionDAO.updateStatus(auctionId, status);
+  res.status(200).json({ message: 'Stato dell\'asta aggiornato con successo', auction });
+  } catch (error: any) {
+    if (error.status) {
+      res.status(error.status).json({ message: error.message });
+    } else {
+      console.error('Errore aggiornamento stato asta:', error);
+      res.status(500).json({ message: 'Errore interno del server' });
     }
-
-    const auction = await Auction.findByPk(auctionId);
-    if (!auction) {
-      res.status(404).json({ message: 'Asta non trovata' });
-      return;
-    }
-
-    auction.status = status as any;
-    await auction.save();
-
-    res.status(200).json({ message: 'Stato dell\'asta aggiornato con successo', auction });
-  } catch (error) {
-    console.error('Errore aggiornamento stato asta:', error);
-    res.status(500).json({ message: 'Errore interno del server' });
   }
 };
 
@@ -352,71 +191,27 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response): Prom
  * @returns 
  */
 export const startAuction = async (req: any, res: any): Promise<void> => {
-  const sequelize = getSequelizeInstance();
-  const transaction = await sequelize.transaction();
   try {
     const auctionId = parseInt(req.params.id);
-    const auction = await Auction.findByPk(auctionId, { transaction });
+    const auctionDAO = new AuctionDAO();
+    const result = await auctionDAO.startAuction(auctionId);
 
-    // Controlla se l'asta esiste
-    if (!auction) {
-      await transaction.rollback();
-      res.status(404).json({ message: 'Asta non trovata' });
-      return;
-    }
-
-    // Controlla se l'asta è nello stato 'open'
-    if (auction.status !== 'open') {
-      await transaction.rollback();
-      res.status(400).json({ message: 'Asta non nello stato open' });
-      return;
-    }
-
-    
-    const partecipanti = await Participation.count({ where: { auctionId, isValid: true }, transaction });
-
-    // Controlla se ci sono abbastanza partecipanti
-    // Se il numero di partecipanti è inferiore al minimo richiesto, chiude l'asta
-    // e notifica i client
-    if (partecipanti < auction.minParticipants) {
-      auction.status = 'cancelled';
-      await auction.save({ transaction });
-
-      await transaction.commit();
-
-      // Notifica ai client che l'asta è chiusa per partecipanti insufficienti
-      // Invia un messaggio a tutti i client connessi che sono iscritti all'asta
-      // broadcastToAuction è una funzione che invia un messaggio a tutti i client connessi
-      // che sono iscritti all'asta specificata
+    if (result.closed) {
       broadcastToAuction(auctionId, {
         type: 'auction_closed',
-        reason: 'Partecipanti insufficienti',
+        reason: result.reason,
       });
-
       res.status(200).json({ message: 'Asta chiusa per partecipanti insufficienti' });
-      return;
+    } else if (result.started) {
+      broadcastToAuction(auctionId, {
+        type: 'auction_started',
+        auctionId,
+      });
+      res.status(200).json({ message: 'Asta avviata' });
     }
-
-
-    auction.status = 'bidding';
-    await auction.save({ transaction });
-
-    await transaction.commit();
-
-    // Notifica ai client che l'asta è iniziata
-    // Invia un messaggio a tutti i client connessi che sono iscritti all'asta
-    // broadcastToAuction è una funzione che invia un messaggio a tutti i client con connessi
-    // che sono iscritti all'asta specificata
-    broadcastToAuction(auctionId, {
-      type: 'auction_started',
-      auctionId,
-    });
-
-    res.status(200).json({ message: 'Asta avviata' });
-  } catch (err) {
-    await transaction.rollback();
+  } catch (err: any) {
     console.error('Errore startAuction:', err);
-    res.status(500).json({ message: 'Errore interno' });
+    res.status(err.status || 500).json({ message: err.message || 'Errore interno' });
   }
 };
 
@@ -451,37 +246,8 @@ export const getAuctionHistory = async (req: Request, res: Response): Promise<vo
            return;
      }
 
-        // Costruisci il filtro per il range temporale
-        const where: any = {};
-        if (from || to) {
-            where.createdAt = {};
-            if (from) where.createdAt[Op.gte] = new Date(from as string);
-            if (to) where.createdAt[Op.lte] = new Date(to as string);
-        }
-
-        // Trova tutte le partecipazioni dell'utente
-        const participations = await Participation.findAll({
-            where: { userId },
-            include: [{
-                model: Auction,
-                where,
-            }]
-        });
-
-        const auction = await Auction.findAll({
-            where: { id: participations.map(p => p.auctionId) },
-            attributes: ['id', 'title', 'status', 'startTime', 'endTime'],
-        });
-
-        // Prepara i dati per la risposta
-        const history = participations.map(p => ({
-            auctionId: p.auctionId,
-            title: auction.find(a => a.id === p.auctionId)?.title,
-            status: auction.find(a => a.id === p.auctionId)?.status,
-            startTime: auction.find(a => a.id === p.auctionId)?.startTime,
-            endTime: auction.find(a => a.id === p.auctionId)?.endTime,
-            isWinner: p.isWinner,
-        }));
+        const auctionDAO = new AuctionDAO();
+        const history = await auctionDAO.getAuctionHistory(userId, from ? new Date(from as string) : undefined, to ? new Date(to as string) : undefined);
 
         if (format === 'pdf') {
             // Esporta in PDF

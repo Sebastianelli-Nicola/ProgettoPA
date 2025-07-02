@@ -19,7 +19,7 @@ interface AuctionAttributes {
     updatedAt?: Date; //timestamp di aggiornamento
 }
 
-interface AuctionCreationAttributes extends Optional<AuctionAttributes, 'id' | 'status'> {}
+export interface AuctionCreationAttributes extends Optional<AuctionAttributes, 'id' | 'status'> {}
 
 export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes> implements AuctionAttributes {
     public id!: number;

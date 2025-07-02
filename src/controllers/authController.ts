@@ -1,10 +1,7 @@
-// src/controllers/authController.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
-import { Wallet } from '../models/Wallet';
-//import { ErrorFactory } from '../errors/ErrorFactory'; // se lo usi
+import { UserDAO } from '../dao/userDAO'; 
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -15,15 +12,17 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const userDAO = new UserDAO();
+
     // Controllo  email
-    const exists = await User.findOne({ where: { email } });
+    const exists = await userDAO.findByEmail(email);
     if (exists) {
       res.status(400).json({ message: 'Email già in uso' });
       return;
     }
 
     //Controllo username
-    const usernameExists = await User.findOne({ where: { username } });
+    const usernameExists = await userDAO.findByUsername(username);
     if (usernameExists) {
       res.status(400).json({ message: 'Username già in uso' });
       return;
@@ -31,8 +30,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     //const hashedPassword = await bcrypt.hash(password, 10);
     //const user = await User.create({ email, password: hashedPassword, role , username });
-    const user = await User.create({ email, password, role , username });
-    await Wallet.create({ userId: user.id, balance: 100 });
+    const user = await userDAO.createUser({ email, password, role, username });
+    await userDAO.createWallet(user.id, 100);
 
     res.status(201).json({ message: 'Registrazione completata' });
   } catch (error) {
@@ -44,9 +43,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
+    const userDAO = new UserDAO();
 
     // Trova l’utente con quella email
-    const user = await User.findOne({ where: { email } });
+    const user = await userDAO.findByEmail(email);
     if (!user) {
       res.status(401).json({ message: 'Credenziali non valide' });
       return;
