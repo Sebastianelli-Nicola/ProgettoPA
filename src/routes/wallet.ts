@@ -11,7 +11,7 @@ const router = express.Router();
  * Il middleware authMiddlewareHandler verifica la presenza di un token JWT valido
  * prima di consentire l'accesso alla rotta.
  */
-router.get('/', authMiddlewareHandler.authWithRoles(['user']), getWalletBalance);
+router.get('/', authMiddlewareHandler.authWithRoles(['bid-participant']), getWalletBalance);
 
 
 /**

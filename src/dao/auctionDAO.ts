@@ -1,5 +1,50 @@
 import { Auction, AuctionCreationAttributes } from '../models/Auction';
 import { Op, Transaction } from 'sequelize';
+
+export class AuctionDAO {
+  async create(data: AuctionCreationAttributes, transaction?: Transaction): Promise<Auction> {
+    return Auction.create(data, { transaction });
+  }
+
+  async getAuctions(status?: string): Promise<Auction[]> {
+    const allowedStatuses = ['created', 'open', 'bidding', 'closed'];
+    const statusStr = status && allowedStatuses.includes(status) ? status : undefined;
+    const whereClause = statusStr ? { status: statusStr } : undefined;
+    return Auction.findAll({ where: whereClause, order: [['createdAt', 'DESC']] });
+  }
+
+  async findById(id: number, transaction?: Transaction): Promise<Auction | null> {
+    return Auction.findByPk(id, { transaction });
+  }
+
+  async updateStatus(id: number, status: string, transaction?: Transaction): Promise<Auction> {
+    const auction = await Auction.findByPk(id, { transaction });
+    if (!auction) throw { status: 404, message: 'Auction not found' };
+    auction.status = status as any;
+    await auction.save({ transaction });
+    return auction;
+  }
+
+  async save(auction: Auction, transaction?: Transaction): Promise<Auction> {
+    return auction.save({ transaction });
+  }
+
+  async getAuctionHistory(userId: number, from?: Date, to?: Date) {
+    const whereAuction: any = { userId };
+    if (from || to) {
+      whereAuction.createdAt = {};
+      if (from) whereAuction.createdAt[Op.gte] = new Date(from as Date);
+      if (to) whereAuction.createdAt[Op.lte] = new Date(to as Date);
+    }
+    return Auction.findAll({
+      where: whereAuction,
+      order: [['createdAt', 'DESC']],
+    });
+  }
+}
+
+/*import { Auction, AuctionCreationAttributes } from '../models/Auction';
+import { Op, Transaction } from 'sequelize';
 import { Sequelize } from 'sequelize';
 import { ParticipationDAO } from './participationDAO';
 import { WalletDAO } from './walletDAO';
@@ -206,4 +251,4 @@ function getSequelizeInstance(): Sequelize {
     throw new Error('Sequelize instance not found on Auction model.');
   }
   return Auction.sequelize;
-}
+}*/

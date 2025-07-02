@@ -1,4 +1,34 @@
 import { Bid } from '../models/Bid';
+import { Transaction } from 'sequelize';
+
+export class BidDAO {
+  async createBid(data: any, transaction?: Transaction) {
+    return Bid.create(data, { transaction });
+  }
+
+  async countByAuctionAndUser(auctionId: number, userId: number, transaction?: Transaction) {
+    return Bid.count({ where: { auctionId, userId }, transaction });
+  }
+
+  async findLastBid(auctionId: number, transaction?: Transaction) {
+    return Bid.findOne({
+      where: { auctionId },
+      order: [['createdAt', 'DESC']],
+      transaction,
+    });
+  }
+
+  async findTopBidByAuction(auctionId: number, transaction?: Transaction) {
+    return Bid.findOne({
+      where: { auctionId },
+      order: [['amount', 'DESC'], ['createdAt', 'ASC']],
+      transaction,
+    });
+  }
+}
+
+
+/*import { Bid } from '../models/Bid';
 import { Auction } from '../models/Auction';
 import { ParticipationDAO } from '../dao/participationDAO';
 
@@ -53,4 +83,4 @@ export class BidDAO {
         transaction: t
     });
   }
-}
+}*/
