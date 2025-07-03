@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import { placeBid } from '../controllers/bidController';
+import { placeBid, getBidsForAuction} from '../controllers/bidController';
 import { authMiddlewareHandler } from '../middlewares/auth/authMiddlewareHandler'; 
 
 const router = Router(); //
@@ -16,5 +16,11 @@ const router = Router(); //
  * @returns {object} - Dettagli dell'offerta effettuata
  */
 router.post('/:id/bid', authMiddlewareHandler.authWithRoles(['bid-participant']), placeBid);
+
+/**
+ * Rotta GET per visualizzare l'elenco dei rilanci di un'asta.
+ * Accessibile solo ai partecipanti o al creatore, solo se l'asta è in fase "bidding".
+ */
+router.get('/:id/bids', authMiddlewareHandler.authWithRoles(['bid-participant', 'bid-creator', 'admin']), getBidsForAuction);
 
 export default router;

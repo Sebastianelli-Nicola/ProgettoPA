@@ -8,7 +8,10 @@
  */
 
 import WebSocket from 'ws';
+import jwt from 'jsonwebtoken';
 import { getWSS } from './websocketServer'; 
+import { ParticipationDAO } from '../dao/participationDAO';
+import { AuctionDAO } from '../dao/auctionDAO';
 
 /**
  * Interfaccia per i messaggi inviati dai client.
@@ -17,18 +20,32 @@ import { getWSS } from './websocketServer';
  * Il messaggio 'join' indica che il client vuole unirsi a un'asta specifica.
  * Il client deve inviare questo messaggio per poter ricevere aggiornamenti sull'asta.
  */
-interface ClientMessage {
-  type: 'join';
-  auctionId: number;
-}
+// interface ClientMessage {
+//   type: 'join';
+//   auctionId: number;
+// }
 
 
 /**
  * Estensione dell'interfaccia WebSocket per includere l'ID dell'asta
  * Questo permette di associare ogni client a un'asta specifica
  */
+// interface AuctionClient extends WebSocket {
+//   auctionId?: number;
+// }
+
+const participationDAO = new ParticipationDAO();
+const auctionDAO = new AuctionDAO();
+
+interface ClientMessage {
+  type: 'join';
+  auctionId: number;
+  token: string;
+}
+
 interface AuctionClient extends WebSocket {
   auctionId?: number;
+  userId?: number;
 }
 
 /**
@@ -38,25 +55,74 @@ interface AuctionClient extends WebSocket {
  * 
  * @param {WebSocket} ws - Il WebSocket del client connesso.
  */
+// export const handleWebSocketConnection = (ws: WebSocket): void => {
+//   const client = ws as AuctionClient; // estende WebSocket per includere auctionId
+
+
+//   ws.on('message', (message: string) => { 
+//     try {
+//       const data = JSON.parse(message) as ClientMessage;    // analizza il messaggio JSON ricevuto
+
+//       // Controlla se il messaggio è di tipo 'join' e contiene un ID asta
+//       if (data.type === 'join') {
+//         client.auctionId = data.auctionId;
+//         console.log(`[WS] Client collegato all'asta ${data.auctionId}`);
+//       }
+//     } catch (err) {
+//       console.error('[WS] Messaggio malformato:', message);
+//     }
+//   });
+
+//   ws.send(JSON.stringify({ message: 'Connessione WebSocket stabilita' }));    // invia un messaggio di conferma al client
+// };
+
 export const handleWebSocketConnection = (ws: WebSocket): void => {
-  const client = ws as AuctionClient; // estende WebSocket per includere auctionId
+  const client = ws as AuctionClient;
 
-
-  ws.on('message', (message: string) => { 
+  ws.on('message', async (message: string) => {
     try {
-      const data = JSON.parse(message) as ClientMessage;    // analizza il messaggio JSON ricevuto
+      const data = JSON.parse(message) as ClientMessage;
 
-      // Controlla se il messaggio è di tipo 'join' e contiene un ID asta
-      if (data.type === 'join') {
+      // Gestione autenticazione e autorizzazione solo su messaggio 'join'
+      if (data.type === 'join' && data.token) {
+        // Verifica JWT
+        let decoded: any;
+        try {
+          decoded = jwt.verify(data.token, process.env.JWT_SECRET!);
+        } catch {
+          ws.send(JSON.stringify({ error: 'Token non valido o scaduto' }));
+          ws.close();
+          return;
+        }
+        client.userId = decoded.id;
         client.auctionId = data.auctionId;
-        console.log(`[WS] Client collegato all'asta ${data.auctionId}`);
+
+        // Verifica che userId e auctionId siano definiti
+        if (typeof client.userId !== 'number' || typeof client.auctionId !== 'number') {
+          ws.send(JSON.stringify({ error: 'Dati utente o asta non validi' }));
+          ws.close();
+          return;
+        }
+
+        // Verifica partecipazione o creazione
+        const isParticipant = await participationDAO.findParticipation(client.userId, client.auctionId);
+        const auction = await auctionDAO.findById(client.auctionId);
+        const isCreator = auction && auction.creatorId === client.userId;
+
+        if (!isParticipant && !isCreator) {
+          ws.send(JSON.stringify({ error: 'Non autorizzato per questa asta' }));
+          ws.close();
+          return;
+        }
+        console.log(`[WS] Client ${client.userId} collegato all'asta ${client.auctionId}`);
       }
     } catch (err) {
-      console.error('[WS] Messaggio malformato:', message);
+      ws.send(JSON.stringify({ error: 'Messaggio malformato o errore interno' }));
+      ws.close();
     }
   });
 
-  ws.send(JSON.stringify({ message: 'Connessione WebSocket stabilita' }));    // invia un messaggio di conferma al client
+  ws.send(JSON.stringify({ message: 'Connessione WebSocket stabilita' }));
 };
 
 /**

@@ -23,6 +23,14 @@ export default {
         updatedAt: new Date(),
       },
       {
+        username: 'creator2',
+        email: 'creator2@example.com',
+        password: 'hashedpassword5',
+        role: 'bid-creator',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
         username: 'participant1',
         email: 'participant1@example.com',
         password: 'hashedpassword3',
@@ -42,17 +50,18 @@ export default {
 
     // 2. WALLETS (uno per partecipant1 e partecipant2)
     await queryInterface.bulkInsert('wallets', [
-      { userId: 3, balance: 500 },
-      { userId: 4, balance: 1600 },
-      // Aggiungi altri wallet se necessario
+      { userId: 2, balance: 2000 }, // Creator1 wallet
+      { userId: 3, balance: 500 },  // Creator2 wallet
+      { userId: 4, balance: 500 },  // Participant1 wallet
+      { userId: 5, balance: 1600 }, // Participant2 wallet
       { userId: 1, balance: 1000 }, // Admin wallet
-      { userId: 2, balance: 2000 }, // Creator wallet
     ]);
 
     // 3. AUCTIONS
     await queryInterface.bulkInsert('auctions', [
       {
         title: 'Auction 1',
+        creatorId: 2, // creator1
         minParticipants: 2,
         maxParticipants: 5,
         entryFee: 50,
@@ -68,6 +77,7 @@ export default {
       },
       {
         title: 'Auction 2',
+        creatorId: 2, // creator1
         minParticipants: 2,
         maxParticipants: 5,
         entryFee: 50,
@@ -83,6 +93,7 @@ export default {
       },
       {
         title: 'Auction 3',
+        creatorId: 3, // creator2
         minParticipants: 2,
         maxParticipants: 5,
         entryFee: 50,
@@ -101,7 +112,7 @@ export default {
     // 4. PARTICIPATIONS
     await queryInterface.bulkInsert('participations', [
       {
-        userId: 3,
+        userId: 5,
         auctionId: 2,
         fee: 50,
         isWinner: false,
@@ -110,7 +121,7 @@ export default {
         updatedAt: new Date(),
       },
       {
-        userId: 3,
+        userId: 5,
         auctionId: 3,
         fee: 50,
         isWinner: true,
@@ -131,9 +142,9 @@ export default {
 
     // 5. BIDS
     await queryInterface.bulkInsert('bids', [
-      { userId: 3, auctionId: 1, amount: 100 },
-      { userId: 4, auctionId: 1, amount: 150 },
-      { userId: 3, auctionId: 1, amount: 200 },
+      { userId: 5, auctionId: 1, amount: 100 },
+      { userId: 5, auctionId: 1, amount: 150 },
+      { userId: 4, auctionId: 1, amount: 200 },
     ]);
   },
 

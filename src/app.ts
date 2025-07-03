@@ -40,7 +40,6 @@ app.use("/auth", authRoutes);         // Rotte per l'autenticazione
 app.use("/auction", auctionRoutes);   // Rotte per le aste
 app.use('/auction', bidRoutes);       // Rotte per le puntate
 app.use('/wallet', walletRoutes);     // Rotte per i portafogli degli utenti
-app.use('/api', auctionRoutes);       // Rotte per le aste
 app.use('/stats', statsRoutes);       // Rotte per le statistiche
 
 

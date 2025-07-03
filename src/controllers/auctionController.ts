@@ -33,17 +33,31 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
       status
     } = req.body;
 
-    // Verifica la presenza di tutti i dati obbligatori
+    // // Verifica la presenza di tutti i dati obbligatori
+    // if (
+    //   !title || !minParticipants || !maxParticipants ||
+    //   !entryFee || !maxPrice || !minIncrement ||
+    //   !bidsPerParticipant || !startTime || !endTime || !relaunchTime
+    // ) {
+    //   res.status(400).json({ message: 'Dati mancanti o incompleti' });
+    //   return;
+    // }
+
+    const creatorId = req.user?.id;
+
+    // Verifica la presenza di tutti i dati obbligatori (accetta anche 0 come valore valido)
     if (
-      !title || !minParticipants || !maxParticipants ||
-      !entryFee || !maxPrice || !minIncrement ||
-      !bidsPerParticipant || !startTime || !endTime || !relaunchTime
+      title == null || minParticipants == null || maxParticipants == null ||
+      entryFee == null || maxPrice == null || minIncrement == null ||
+      bidsPerParticipant == null || startTime == null || endTime == null || relaunchTime == null
     ) {
       res.status(400).json({ message: 'Dati mancanti o incompleti' });
       return;
     }
 
+
     const newAuction = await auctionService.createAuction({
+      creatorId,
       title,
       minParticipants,
       maxParticipants,
@@ -58,9 +72,9 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
     });
 
     res.status(201).json({ message: 'Asta creata con successo', auction: newAuction });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Errore creazione asta:', error);
-    res.status(500).json({ message: 'Errore interno del server' });
+    res.status(error.status || 500).json({ message: error.message || 'Errore interno del server' });
   }
 };
 

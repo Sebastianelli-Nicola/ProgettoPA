@@ -90,5 +90,14 @@ export class BidService {
 
         return { bid, extended, newEndTime };
         });
-  }
+    }
+
+    /**
+     * Restituisce tutte le offerte per una specifica asta.
+     * @param auctionId ID dell'asta
+     * @returns Array di offerte ordinate per data di creazione crescente
+     */
+    async getBidsForAuction(auctionId: number) {
+      return this.bidDAO.findBidsByAuctionId(auctionId);
+    }
 }
