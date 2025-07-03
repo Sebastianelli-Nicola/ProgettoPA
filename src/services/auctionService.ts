@@ -13,6 +13,7 @@ import { WalletDAO } from '../dao/walletDAO';
 import { BidDAO } from '../dao/bidDAO';
 import { Auction } from '../models/Auction';
 import { Sequelize } from 'sequelize';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 
 /**
  * Servizio per gestire le operazioni relative alle aste.
@@ -49,6 +50,68 @@ export class AuctionService {
   async createAuction(data: any) {
     const sequelize = this.getSequelize();
     return sequelize.transaction(async (transaction) => {
+      // Controlla che la data e ora di inizio siano almeno uguali o superiori all'attuale
+      const now = new Date();
+      const startTime = new Date(data.startTime);
+      if (startTime < now) {
+        throw ErrorFactory.createError(
+          ErrorType.Validation,
+          "La data e ora di inizio dell'asta devono essere uguali o successive a quella attuale."
+        );
+      }
+
+      /*const endTime = new Date(data.startTime);
+      if (endTime <= startTime){
+        throw ErrorFactory.createError(
+          ErrorType.Validation,
+          "La data e ora di fine dell'asta devono essere successive a quella di inizio."
+        );
+      }*/
+
+      // Controlla che tutti i valori numerici siano positivi
+      const numericFields = [
+        { key: 'minParticipants', value: data.minParticipants },
+        { key: 'maxParticipants', value: data.maxParticipants },
+        //{ key: 'entryFee', value: data.entryFee },
+        { key: 'maxPrice', value: data.maxPrice },
+        { key: 'minIncrement', value: data.minIncrement },
+        { key: 'bidsPerParticipant', value: data.bidsPerParticipant },
+        { key: 'relaunchTime', value: data.relaunchTime}
+      ];
+
+      for (const field of numericFields) {
+        if (typeof field.value !== 'number' || field.value <= 0) {
+          throw ErrorFactory.createError(
+            ErrorType.Validation,
+            `Il campo "${field.key}" deve essere un numero positivo.`
+          );
+        }
+      }
+
+      // maxPrice deve essere maggiore di minIncrement
+      if (data.maxPrice <= data.minIncrement) {
+        throw ErrorFactory.createError(
+          ErrorType.Validation,
+          'Il campo "maxPrice" deve essere maggiore di "minIncrement".'
+        );
+      }
+
+      // maxParticipants deve essere maggiore o uguale a minParticipants
+      if (data.maxParticipants < data.minParticipants) {
+        throw ErrorFactory.createError(
+          ErrorType.Validation,
+          'Il campo "maxParticipants" deve essere maggiore o uguale a "minParticipants".'
+        );
+      }
+
+      // maxPrice deve essere maggiore di minIncrement
+      if (data.entryFee < 0) {
+        throw ErrorFactory.createError(
+          ErrorType.Validation,
+          'Il campo "entryFee" deve essere maggiore uguale a zero.'
+        );
+      }
+
       return this.auctionDAO.create(data, transaction);
     });
   }
@@ -228,6 +291,13 @@ export class AuctionService {
 
       // Controlla se l'asta è nello stato "open"
       if (auction.status !== 'open') throw { status: 400, message: 'Asta non nello stato open' };
+
+      // Controlla che la data e ora attuale sia successiva allo startTime dell'asta
+      const now = new Date();
+      const startTime = new Date(auction.startTime);
+      if (now < startTime) {
+        return { notStarted: true, message: 'L\'asta non può essere avviata prima della data/ora di inizio prevista.' };
+      }
 
       // Conta i partecipanti validi all'asta
       const partecipanti = await this.participationDAO.countValidByAuction(auctionId, transaction);
