@@ -66,5 +66,18 @@ export class BidDAO {
       transaction,
     });
   }
+
+
+    /**
+   * Restituisce tutte le offerte per una specifica asta.
+   * @param auctionId ID dell'asta.
+   * @returns Array di offerte ordinate per data di creazione crescente.
+   */
+  async findBidsByAuctionId(auctionId: number) {
+    return Bid.findAll({
+      where: { auctionId },
+      order: [['createdAt', 'ASC']]
+    });
+  }
 }
 

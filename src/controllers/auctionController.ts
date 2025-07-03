@@ -43,6 +43,8 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
     //   return;
     // }
 
+    const creatorId = req.user?.id;
+
     // Verifica la presenza di tutti i dati obbligatori (accetta anche 0 come valore valido)
     if (
       title == null || minParticipants == null || maxParticipants == null ||
@@ -55,6 +57,7 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
 
 
     const newAuction = await auctionService.createAuction({
+      creatorId,
       title,
       minParticipants,
       maxParticipants,

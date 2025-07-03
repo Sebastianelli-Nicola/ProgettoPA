@@ -9,9 +9,11 @@
 
 import { Model, DataTypes, Optional } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';  
+import { User } from './User';
 
 interface AuctionAttributes {
     id: number;
+    creatorId: number;
     title: string;
     minParticipants: number;
     maxParticipants: number;
@@ -32,6 +34,7 @@ export interface AuctionCreationAttributes extends Optional<AuctionAttributes, '
 
 export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes> implements AuctionAttributes {
     public id!: number;
+    public creatorId!: number;
     public title!: string;
     public minParticipants!: number;
     public maxParticipants!: number;
@@ -56,6 +59,7 @@ const sequelize = getSequelizeInstance();
 // Utilizza sequelize.define per definire il modello con i suoi attributi e opzioni
 Auction.init({
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  creatorId: { type: DataTypes.INTEGER, allowNull: false},
   title: { type: DataTypes.STRING, allowNull: false },
   minParticipants: { type: DataTypes.INTEGER, allowNull: false },
   maxParticipants: { type: DataTypes.INTEGER, allowNull: false },
@@ -77,3 +81,9 @@ Auction.init({
 });
 
 //Auction.hasMany(Participation);
+
+// Relazione: Un'Asta appartiene a un Utente (il creatore)
+Auction.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
+
+// (opzionale) Un utente può aver creato molte aste
+User.hasMany(Auction, { foreignKey: 'creatorId', as: 'createdAuctions' });

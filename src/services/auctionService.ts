@@ -112,6 +112,14 @@ export class AuctionService {
         );
       }
 
+      // Controlla che creatorId sia presente
+      if (!data.creatorId) {
+        throw ErrorFactory.createError(
+          ErrorType.Validation,
+          "Il campo 'creatorId' è obbligatorio."
+        );
+      }
+
       return this.auctionDAO.create(data, transaction);
     });
   }
@@ -282,23 +290,25 @@ export class AuctionService {
    */
   async startAuction(auctionId: number) {
     const sequelize = this.getSequelize();
+    
     return sequelize.transaction(async (transaction) => {
       // Trova l'asta per ID
       const auction = await this.auctionDAO.findById(auctionId, transaction);
-
+      
       // Controlla se l'asta esiste
       if (!auction) throw { status: 404, message: 'Asta non trovata' };
-
+      
       // Controlla se l'asta è nello stato "open"
       if (auction.status !== 'open') throw { status: 400, message: 'Asta non nello stato open' };
-
-      // Controlla che la data e ora attuale sia successiva allo startTime dell'asta
-      const now = new Date();
-      const startTime = new Date(auction.startTime);
-      if (now < startTime) {
-        return { notStarted: true, message: 'L\'asta non può essere avviata prima della data/ora di inizio prevista.' };
-      }
-
+      
+      
+      // // Controlla che la data e ora attuale sia successiva allo startTime dell'asta
+      // const now = new Date();
+      // const startTime = new Date(auction.startTime);
+      // if (now < startTime) {
+      //   return { notStarted: true, message: 'L\'asta non può essere avviata prima della data/ora di inizio prevista.' };
+      // }
+      
       // Conta i partecipanti validi all'asta
       const partecipanti = await this.participationDAO.countValidByAuction(auctionId, transaction);
       const maxPrice = Number(auction.maxPrice);    // Prezzo massimo dell'asta
@@ -310,7 +320,6 @@ export class AuctionService {
       if (partecipanti < auction.minParticipants) {
         auction.status = 'cancelled';
         await this.auctionDAO.save(auction, transaction);
-
         // Trova tutti i partecipanti validi all'asta
         const participants = await this.participationDAO.findValidParticipants(auctionId, transaction);
 

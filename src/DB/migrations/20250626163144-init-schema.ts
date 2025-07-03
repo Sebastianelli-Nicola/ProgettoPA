@@ -27,6 +27,11 @@ export = {
     // AUCTIONS
     await queryInterface.createTable('auctions', {
       id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+      creatorId: { type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
+        references: { model: 'users', key: 'id' },
+        onDelete: 'CASCADE',
+      },
       title: { type: DataTypes.STRING, allowNull: false },
       minParticipants: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
       maxParticipants: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
