@@ -1,26 +1,23 @@
 /**
  * @fileoverview    Modulo per gestire il server WebSocket.
+ * 
  * Fornisce funzioni per inizializzare il server e gestire le connessioni.
  * Gestisce le connessioni WebSocket e i messaggi dei client.
  */
 
-import WebSocket, { WebSocketServer } from 'ws';
+import { WebSocketServer } from 'ws';
 import { Server } from 'http';
 import { handleWebSocketConnection } from './websockethandlers';
 
-/**
- * Modulo per gestire il server WebSocket.
- * Fornisce funzioni per inizializzare il server e gestire le connessioni.
- */
 
 let wss: WebSocketServer; // wss è il WebSocketServer che gestisce le connessioni WebSocket  
-
 
 /**
  * Inizializza il server WebSocket e gestisce le connessioni.
  * @param {Server} server - Il server HTTP su cui il WebSocket sarà attivo.
  */
 export const initWebSocket = (server: Server): void => {
+  
   // Crea una nuova istanza di WebSocketServer associata al server HTTP
   wss = new WebSocketServer({ server });
 

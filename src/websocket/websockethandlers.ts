@@ -10,17 +10,23 @@
 import WebSocket from 'ws';
 import { getWSS } from './websocketServer'; 
 
-// Definizione del tipo di messaggio che il client può inviare
-// In questo caso, il client può inviare un messaggio di tipo 'join' con un ID asta
-// Il messaggio 'join' indica che il client vuole unirsi a un'asta specifica
-// Il client deve inviare questo messaggio per poter ricevere aggiornamenti sull'asta
+/**
+ * Interfaccia per i messaggi inviati dai client.
+ * Definisce il tipo di messaggio che il client può inviare al server.
+ * In questo caso, il client può inviare un messaggio di tipo 'join' con un ID asta.
+ * Il messaggio 'join' indica che il client vuole unirsi a un'asta specifica.
+ * Il client deve inviare questo messaggio per poter ricevere aggiornamenti sull'asta.
+ */
 interface ClientMessage {
   type: 'join';
   auctionId: number;
 }
 
-// Estensione dell'interfaccia WebSocket per includere l'ID dell'asta
-// Questo permette di associare ogni client a un'asta specifica
+
+/**
+ * Estensione dell'interfaccia WebSocket per includere l'ID dell'asta
+ * Questo permette di associare ogni client a un'asta specifica
+ */
 interface AuctionClient extends WebSocket {
   auctionId?: number;
 }
@@ -33,12 +39,14 @@ interface AuctionClient extends WebSocket {
  * @param {WebSocket} ws - Il WebSocket del client connesso.
  */
 export const handleWebSocketConnection = (ws: WebSocket): void => {
-  const client = ws as AuctionClient;
+  const client = ws as AuctionClient; // estende WebSocket per includere auctionId
 
-  ws.on('message', (message: string) => {
+
+  ws.on('message', (message: string) => { 
     try {
-      const data = JSON.parse(message) as ClientMessage;
+      const data = JSON.parse(message) as ClientMessage;    // analizza il messaggio JSON ricevuto
 
+      // Controlla se il messaggio è di tipo 'join' e contiene un ID asta
       if (data.type === 'join') {
         client.auctionId = data.auctionId;
         console.log(`[WS] Client collegato all'asta ${data.auctionId}`);
@@ -48,7 +56,7 @@ export const handleWebSocketConnection = (ws: WebSocket): void => {
     }
   });
 
-  ws.send(JSON.stringify({ message: 'Connessione WebSocket stabilita' }));
+  ws.send(JSON.stringify({ message: 'Connessione WebSocket stabilita' }));    // invia un messaggio di conferma al client
 };
 
 /**
@@ -56,16 +64,14 @@ export const handleWebSocketConnection = (ws: WebSocket): void => {
  * Questa funzione permette di inviare aggiornamenti in tempo reale ai client
  * che hanno espresso interesse per un'asta specifica.
  * @param auctionId - L'ID dell'asta a cui inviare i dati.
- * Invia i dati a tutti i client connessi che sono iscritti all'asta specificata.
  * @param data - I dati da inviare ai client.
  */
 export const broadcastToAuction = (auctionId: number, data: object): void => {
-  const wss = getWSS(); // ottieni wss
-
+  const wss = getWSS();   // Ottiene l'istanza del WebSocket Server
   
   // Invia i dati a tutti i client connessi che sono iscritti all'asta specificata
   wss.clients.forEach((client: WebSocket) => {
-    const wsClient = client as AuctionClient;
+    const wsClient = client as AuctionClient; // estende WebSocket per includere auctionId
 
     // Controlla se il client è connesso e se l'ID asta corrisponde a quello specificato
     // Se il client è connesso e ha l'ID asta corretto, invia i dati

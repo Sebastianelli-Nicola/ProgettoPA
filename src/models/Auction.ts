@@ -1,6 +1,14 @@
+/**
+ * @fileoverview Questo file definisce il modello per le aste utilizzando Sequelize.
+ * 
+ * Il modello rappresenta le aste nel database e include attributi come titolo, numero minimo e massimo di partecipanti, 
+ * quota di iscrizione, prezzo massimo, incremento minimo, numero di puntate disponibili per partecipante, stato dell'asta, 
+ * orari di inizio e fine, e durata della fase di rilancio.
+ * Gli stati possibili dell'asta sono: 'created', 'open', 'bidding', 'closed', 'cancelled'.
+ */
+
 import { Model, DataTypes, Optional } from 'sequelize';
 import { getSequelizeInstance } from '../DB/sequelize';  
-import { Participation } from './Participation';
 
 interface AuctionAttributes {
     id: number;
@@ -19,6 +27,7 @@ interface AuctionAttributes {
     updatedAt?: Date; //timestamp di aggiornamento
 }
 
+// Definisce gli attributi per la creazione di una nuova asta
 export interface AuctionCreationAttributes extends Optional<AuctionAttributes, 'id' | 'status'> {}
 
 export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes> implements AuctionAttributes {
@@ -43,6 +52,8 @@ export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes>
 //istanza singleton di sequelize
 const sequelize = getSequelizeInstance();
 
+// Inizializza il modello Auction
+// Utilizza sequelize.define per definire il modello con i suoi attributi e opzioni
 Auction.init({
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   title: { type: DataTypes.STRING, allowNull: false },
