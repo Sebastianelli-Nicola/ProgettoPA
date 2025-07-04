@@ -135,7 +135,7 @@ export const closeAuction = async (req: AuthRequest, res: Response, next: NextFu
       finalAmount: result.finalAmount,
     });
 
-    res.status(200).json({
+    res.status(HTTPStatus.OK).json({
       message: 'Asta chiusa con successo',
       winnerId: result.winnerId,
       finalAmount: result.finalAmount,
