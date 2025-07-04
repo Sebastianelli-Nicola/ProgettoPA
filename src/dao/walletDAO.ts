@@ -7,6 +7,16 @@
 import { Wallet } from '../models/Wallet';
 
 export class WalletDAO {
+  private static instance: WalletDAO;
+
+  private constructor() {}
+
+  public static getInstance(): WalletDAO {
+    if (!WalletDAO.instance) {
+      WalletDAO.instance = new WalletDAO();
+    }
+    return WalletDAO.instance;
+  }
 
   /**
    * Restituisce il wallet di un utente tramite userId.

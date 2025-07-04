@@ -13,7 +13,7 @@ import { Auction } from '../models/Auction';
 import { ParticipationDAO } from '../dao/participationDAO';
 
 const bidService = new BidService();
-const participationDAO = new ParticipationDAO();
+const participationDAO = ParticipationDAO.getInstance();
 
 
 /**

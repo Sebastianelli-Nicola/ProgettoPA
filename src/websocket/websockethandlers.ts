@@ -34,8 +34,8 @@ import { AuctionDAO } from '../dao/auctionDAO';
 //   auctionId?: number;
 // }
 
-const participationDAO = new ParticipationDAO();
-const auctionDAO = new AuctionDAO();
+const participationDAO = ParticipationDAO.getInstance();
+const auctionDAO = AuctionDAO.getInstance();
 
 interface ClientMessage {
   type: 'join';

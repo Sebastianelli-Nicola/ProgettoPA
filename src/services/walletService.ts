@@ -11,7 +11,7 @@ import { Wallet } from '../models/Wallet';
  * Servizio per gestire il portafoglio degli utenti.
  */
 export class WalletService {
-  private walletDAO = new WalletDAO();
+  private walletDAO = WalletDAO.getInstance();
 
   /**
    * Ottiene il saldo del portafoglio per un utente.

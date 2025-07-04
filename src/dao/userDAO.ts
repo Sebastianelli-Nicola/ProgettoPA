@@ -11,6 +11,16 @@ import { WalletDAO } from './walletDAO';
 type AllowedRole = "admin" | "bid-creator" | "bid-participant";
 
 export class UserDAO {
+  private static instance: UserDAO;
+
+  private constructor() {}
+
+  public static getInstance(): UserDAO {
+    if (!UserDAO.instance) {
+      UserDAO.instance = new UserDAO();
+    }
+    return UserDAO.instance;
+  }
 
   /**
    * Trova un utente tramite email
@@ -53,7 +63,7 @@ export class UserDAO {
    * @returns L'istanza Wallet creata.
    */
   async createWallet(userId: number, initialBalance: number) {
-    const walletDAO = new WalletDAO();
+    const walletDAO = WalletDAO.getInstance();
     return walletDAO.create({ userId, balance: initialBalance });
   }
 }
