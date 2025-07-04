@@ -5,6 +5,8 @@
  */
 
 import { Wallet } from '../models/Wallet';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
+
 
 export class WalletDAO {
 
@@ -56,7 +58,7 @@ export class WalletDAO {
   async recharge(userId: number, amount: number, transaction?: any): Promise<Wallet> {
     const wallet = await Wallet.findOne({ where: { userId }, transaction });
     if (!wallet) {
-      throw { status: 404, message: 'Wallet non trovato' };
+      throw ErrorFactory.createError(ErrorType.WalletNotFound);
     }
     wallet.balance += Number(amount);
     await wallet.save({ transaction });

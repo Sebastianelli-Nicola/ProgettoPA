@@ -9,7 +9,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { ApplicationError } from '../factory/errorFactory'; // Assicurati che il path sia corretto
+import { ApplicationError, ErrorFactory, ErrorType } from '../factory/errorFactory'; // Assicurati che il path sia corretto
 
 /**
  * Middleware per la gestione degli errori in Express.
@@ -38,14 +38,12 @@ export const errorHandler = (
     return;
   }
 
-  // Errore generico o sconosciuto
-  console.error('Errore non gestito:', err);
-
-  // Restituisce un errore generico
-  res.status(500).json({
+  // Errore generico o sconosciuto: usa ErrorFactory
+  const genericError = ErrorFactory.createError(ErrorType.Generic, err.message);
+  res.status(genericError.status).json({
     error: {
-      name: 'InternalServerError',
-      message: 'Errore interno del server',
+      name: genericError.name,
+      message: genericError.message,
     },
   });
 };

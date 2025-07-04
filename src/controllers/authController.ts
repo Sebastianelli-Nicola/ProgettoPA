@@ -5,8 +5,10 @@
  * Ogni funzione gestisce la logica di business e restituisce risposte HTTP appropriate.
  */
 
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { UserService } from '../services/userService';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
+import HTTPStatus from 'http-status-codes';
 
 const userService = new UserService();
 
@@ -15,13 +17,13 @@ const userService = new UserService();
  * Registra un nuovo utente.
  * Riceve i dati dal body della richiesta, li passa al servizio e restituisce il risultato.
  */
-export const register = async (req: Request, res: Response): Promise<void> => {
+export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const result = await userService.register(req.body);
-    res.status(201).json(result);     // Utente creato con successo
+    res.status(HTTPStatus.CREATED).json(result);     // Utente creato con successo
   } catch (error: any) {
     console.error(error);
-    res.status(error.status || 500).json({ message: error.message || 'Errore interno del server' });
+    next(error);
   }
 };
 
@@ -30,14 +32,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
  * Effettua il login di un utente.
  * Riceve email e password dal body, li passa al servizio e restituisce il risultato (token o dati utente).
  */
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      const err = ErrorFactory.createError(ErrorType.MissingCredentials);
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
+    
     const result = await userService.login(email, password);
-    res.json(result);     // Login riuscito, restituisce token/dati utente
+    res.status(HTTPStatus.OK).json(result); // Login riuscito, restituisce token/dati utente
   } catch (error: any) {
     console.error('Errore login:', error);
-    res.status(error.status || 500).json({ message: error.message || 'Errore interno del server' });
+    next(error);
   }
 };
 

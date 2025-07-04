@@ -10,6 +10,7 @@
  */
 import { BaseHandler } from '../BaseHandler'; // importa la tua classe BaseHandler
 import jwt from 'jsonwebtoken';
+import { ErrorFactory, ErrorType } from '../../factory/errorFactory';
 import { Request, Response, NextFunction } from 'express';
 
 /**
@@ -41,18 +42,21 @@ export class JWTAuthHandler extends BaseHandler {
     const authHeader = req.headers.authorization; // ottiene l'header Authorization
 
     if (!authHeader) {
-      res.status(401).json({ message: 'Token non fornito' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.MissingAuthHeader));
     }
 
     const token = authHeader.split(' ')[1]; // estrae il token dall'header
+
+    if (!token) {
+      return next(ErrorFactory.createError(ErrorType.MissingToken));
+    }
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; role: string }; // verifica e decodifica il token
       (req as AuthRequest).user = decoded; // aggiunge le informazioni dell'utente alla richiesta
       super.handle(req, res, next); // continua nella catena
     } catch {
-      res.status(403).json({ message: 'Token non valido o scaduto' });
+      return next(ErrorFactory.createError(ErrorType.InvalidToken));
     }
   }
 }

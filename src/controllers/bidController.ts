@@ -5,12 +5,14 @@
  * Ogni funzione restituisce risposte HTTP appropriate e gestisce eventuali errori.
  */
 
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 import { BidService } from '../services/bidService';
 import { Auction } from '../models/Auction';
 import { ParticipationDAO } from '../dao/participationDAO';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
+import HTTPStatus from 'http-status-codes';
 
 const bidService = new BidService();
 const participationDAO = new ParticipationDAO();
@@ -21,7 +23,7 @@ const participationDAO = new ParticipationDAO();
  * Valida i dati in ingresso, chiama il servizio per registrare l'offerta e notifica i partecipanti tramite websocket.
  * Restituisce la nuova offerta registrata o un errore se i dati sono mancanti/non validi.
  */
-export const placeBid = async (req: AuthRequest, res: Response): Promise<void> => {
+export const placeBid = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const auctionId = parseInt(req.params.id);
     const userId = req.user?.id;
@@ -29,14 +31,12 @@ export const placeBid = async (req: AuthRequest, res: Response): Promise<void> =
 
     // Verifica che l'utente sia autenticato
     if (!userId) {
-      res.status(401).json({ message: 'Utente non autenticato' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.Authentication));
     }
 
     // Verifica che l'importo sia valido
     if (!amount || isNaN(amount)) {
-      res.status(400).json({ message: 'Importo offerta non valido' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.Validation, 'Importo offerta non valido'));
     }
 
     // Registra l'offerta tramite il servizio
@@ -61,14 +61,9 @@ export const placeBid = async (req: AuthRequest, res: Response): Promise<void> =
       },
     });
 
-    res.status(201).json({ message: 'Offerta registrata con successo', bid: result.bid });
+      res.status(HTTPStatus.CREATED).json({ message: 'Offerta registrata con successo', bid: result.bid });
   } catch (error: any) {
-    if (error.status) {
-      res.status(error.status).json({ message: error.message });
-    } else {
-      console.error('Errore offerta:', error);
-      res.status(500).json({ message: 'Errore interno del server' });
-    }
+    next(error);
   }
 };
 
@@ -77,42 +72,38 @@ export const placeBid = async (req: AuthRequest, res: Response): Promise<void> =
  * Restituisce l'elenco dei rilanci (offerte) per una specifica asta,
  * solo se l'utente è partecipante o creatore e l'asta è in fase "bidding".
  */
-export const getBidsForAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getBidsForAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const auctionId = parseInt(req.params.id);
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(401).json({ message: 'Utente non autenticato' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.Authentication));
     }
 
     // Trova l'asta
     const auction = await Auction.findByPk(auctionId);
     if (!auction) {
-      res.status(404).json({ message: 'Asta non trovata' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.AuctionNotFound));
     }
 
     // Consenti solo se l'asta è in fase di rilancio
     if (auction.status !== 'bidding') {
-      res.status(403).json({ message: 'Non puoi visualizzare i rilanci: asta non in fase di rilancio' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.BidsViewNotAllowed));
     }
 
     // Verifica se l'utente è partecipante o creatore
     const isParticipant = await participationDAO.findParticipation(userId, auctionId);
     const isCreator = auction.creatorId === userId;
     if (!isParticipant && !isCreator) {
-      res.status(403).json({ message: 'Non sei autorizzato a visualizzare i rilanci di questa asta' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.BidsViewNotAuthorized));
     }
 
     // Recupera tutti i rilanci per l'asta
     const bids = await bidService.getBidsForAuction(auctionId);
     res.json(bids);
   } catch (error: any) {
-    res.status(error.status || 500).json({ message: error.message || 'Errore interno del server' });
+    next(error);
   }
 };
 
