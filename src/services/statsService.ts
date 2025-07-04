@@ -7,13 +7,13 @@
 import { StatsDAO } from '../dao/statsDAO';
 import { Op } from 'sequelize';   
 import PDFDocument from 'pdfkit';
-
+import { BidDAO } from '../dao/bidDAO';
 
 /**
  * Servizio per la gestione delle statistiche.
  */
 export class StatsService {
-  private statsDAO = new StatsDAO();
+  private statsDAO = StatsDAO.getInstance();
 
   /**
    * Ottiene le statistiche delle aste.
@@ -40,20 +40,26 @@ export class StatsService {
 
     let completedCount = 0;   // Conteggio delle aste completate
     let cancelledCount = 0;   // Conteggio delle aste annullate
-    const totalBidsEffettuate = bids.length;   // Conteggio totale delle puntate effettuate
     let totalBidsMassime = 0;  // Conteggio totale delle puntate massime
+    let totaleBidsEffettuate = 0; // Inizializza il conteggio delle puntate effettuate
+    let sommaRapporti = 0; // somma dei rapporti delle puntate
+    const bidDAO = BidDAO.getInstance();
 
     // Calcola le statistiche per ogni asta
     for (const auction of auctions) {
         // Verifica lo stato dell'asta e incrementa i contatori
-        if (auction.status === 'closed') completedCount++;
+        if (auction.status === 'closed') {  
+         completedCount++;
+         totalBidsMassime = auction.maxParticipants * auction.bidsPerParticipant;  // Conteggio totale delle puntate massime
+         totaleBidsEffettuate = await bidDAO.countByAuction(auction.id); // Conteggio totale delle puntate effettuate
+         sommaRapporti += totalBidsMassime > 0 ? totaleBidsEffettuate / totalBidsMassime : 0;
+        } 
         else if (auction.status === 'cancelled') cancelledCount++;
-        totalBidsMassime += auction.maxParticipants * auction.bidsPerParticipant;  // Conteggio totale delle puntate massime
     }
 
     // Calcola il rapporto medio delle puntate
-    const averageBidRatio = totalBidsMassime > 0 ? totalBidsEffettuate / totalBidsMassime : 0;
-    console.log( 'Total Bids Effettuate:', totalBidsEffettuate, 'Total Bids Massime:', totalBidsMassime, 'Average Bid Ratio:' , averageBidRatio );
+    const averageBidRatio = sommaRapporti / auctions.length;
+    console.log( 'Total Bids Effettuate:', totaleBidsEffettuate, 'Total Bids Massime:', totalBidsMassime, 'Average Bid Ratio:' , averageBidRatio );
 
     // Restituisce le statistiche delle aste
     return {

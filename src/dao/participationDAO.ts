@@ -11,6 +11,16 @@ import { Transaction } from 'sequelize';
 import { Op } from 'sequelize';
 
 export class ParticipationDAO {
+  private static instance: ParticipationDAO;
+
+  private constructor() {}
+
+  public static getInstance(): ParticipationDAO {
+    if (!ParticipationDAO.instance) {
+      ParticipationDAO.instance = new ParticipationDAO();
+    }
+    return ParticipationDAO.instance;
+  }
 
   /**
    * Trova la partecipazione di un utente a una specifica asta.

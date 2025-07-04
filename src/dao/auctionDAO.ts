@@ -10,6 +10,16 @@ import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 import { Op, Transaction } from 'sequelize';
 
 export class AuctionDAO {
+  private static instance: AuctionDAO;
+
+  private constructor() {}
+
+  public static getInstance(): AuctionDAO {
+    if (!AuctionDAO.instance) {
+      AuctionDAO.instance = new AuctionDAO();
+    }
+    return AuctionDAO.instance;
+  }
 
   /**
    * Crea una nuova asta nel database.

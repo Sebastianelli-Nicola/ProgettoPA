@@ -15,8 +15,8 @@ import { ErrorFactory, ErrorType } from '../factory/errorFactory';
  * Servizio per gestire le offerte nelle aste.
  */
 export class BidService {
-  private bidDAO = new BidDAO();
-  private participationDAO = new ParticipationDAO();
+  private bidDAO = BidDAO.getInstance();
+  private participationDAO = ParticipationDAO.getInstance();
 
   /**
    * Ottiene l'istanza di Sequelize associata al modello Auction.

@@ -23,10 +23,10 @@ import { ErrorFactory, ErrorType } from '../factory/errorFactory';
  * Le operazioni includono la creazione di aste, l'iscrizione degli utenti, la chiusura delle aste e la gestione delle puntate. 
  */
 export class AuctionService {
-  private auctionDAO = new AuctionDAO();
-  private participationDAO = new ParticipationDAO();
-  private walletDAO = new WalletDAO();
-  private bidDAO = new BidDAO();
+  private auctionDAO = AuctionDAO.getInstance();
+  private participationDAO = ParticipationDAO.getInstance();
+  private walletDAO = WalletDAO.getInstance();
+  private bidDAO = BidDAO.getInstance();
 
   /**
    * Ottiene l'istanza di Sequelize associata al modello Auction.

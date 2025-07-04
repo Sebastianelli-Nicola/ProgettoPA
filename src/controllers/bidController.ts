@@ -15,7 +15,7 @@ import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 import HTTPStatus from 'http-status-codes';
 
 const bidService = new BidService();
-const participationDAO = new ParticipationDAO();
+const participationDAO = ParticipationDAO.getInstance();
 
 
 /**

@@ -18,7 +18,7 @@ type AllowedRole = "admin" | "bid-creator" | "bid-participant";
  * Servizio per gestire gli utenti.
  */
 export class UserService {
-  private userDAO = new UserDAO();
+  private userDAO = UserDAO.getInstance();
 
   /**
    * Registra un nuovo utente.

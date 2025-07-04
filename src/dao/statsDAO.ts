@@ -12,6 +12,16 @@ import { Op } from 'sequelize';
 import { AuctionDAO } from './auctionDAO';
 
 export class StatsDAO {
+  private static instance: StatsDAO;
+
+  private constructor() {}
+
+  public static getInstance(): StatsDAO {
+    if (!StatsDAO.instance) {
+      StatsDAO.instance = new StatsDAO();
+    }
+    return StatsDAO.instance;
+  }
 
   /**
    * Trova tutte le aste che hanno offerte, opzionalmente filtrate per data.
@@ -56,7 +66,7 @@ export class StatsDAO {
    * @returns Array di partecipazioni trovate.
    */
   async findParticipations(userId: number, from?: Date, to?: Date) {
-    const participationDAO = new ParticipationDAO();
+    const participationDAO = ParticipationDAO.getInstance();
     return participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
   }
 
@@ -86,7 +96,7 @@ export class StatsDAO {
    * @returns Oggetto con due array: aste vinte (won) e perse (lost).
    */
   async getAuctionHistory(userId: number, from?: Date, to?: Date) {
-    const participationDAO = new ParticipationDAO();
+    const participationDAO = ParticipationDAO.getInstance();
 
     // Recupera tutte le partecipazioni dell'utente nel periodo
     const participations = await participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
@@ -95,7 +105,7 @@ export class StatsDAO {
     const auctionIds = participations.map(p => p.auctionId);
 
     // Recupera tutte le aste chiuse tra quelle partecipate
-    const auctionDAO = new AuctionDAO();
+    const auctionDAO = AuctionDAO.getInstance();
     const auctions = await auctionDAO.findAllClosed(auctionIds);
 
     // Mappa per associare una partecipazione a un'asta

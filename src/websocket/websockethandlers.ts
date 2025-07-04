@@ -24,6 +24,23 @@ const auctionDAO = new AuctionDAO();
  * Il messaggio 'join' indica che il client vuole unirsi a un'asta specifica.
  * Il client deve inviare questo messaggio per poter ricevere aggiornamenti sull'asta.
  */
+// interface ClientMessage {
+//   type: 'join';
+//   auctionId: number;
+// }
+
+
+/**
+ * Estensione dell'interfaccia WebSocket per includere l'ID dell'asta
+ * Questo permette di associare ogni client a un'asta specifica
+ */
+// interface AuctionClient extends WebSocket {
+//   auctionId?: number;
+// }
+
+const participationDAO = ParticipationDAO.getInstance();
+const auctionDAO = AuctionDAO.getInstance();
+
 interface ClientMessage {
   type: 'join';
   auctionId: number;
