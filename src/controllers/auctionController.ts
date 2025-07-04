@@ -9,6 +9,8 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 import { AuctionService } from '../services/auctionService';
+import HTTPStatus from 'http-status-codes';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 
 const auctionService = new AuctionService();
 
@@ -43,6 +45,7 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
     //   return;
     // }
 
+
     const creatorId = req.user?.id;
 
     // Verifica la presenza di tutti i dati obbligatori (accetta anche 0 come valore valido)
@@ -51,7 +54,8 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
       entryFee == null || maxPrice == null || minIncrement == null ||
       bidsPerParticipant == null || startTime == null || endTime == null || relaunchTime == null
     ) {
-      res.status(400).json({ message: 'Dati mancanti o incompleti' });
+      const err = ErrorFactory.createError(ErrorType.BadRequest, 'Dati mancanti o incompleti');
+      res.status(err.status).json({ message: err.message });
       return;
     }
 
@@ -71,10 +75,11 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
       status,
     });
 
-    res.status(201).json({ message: 'Asta creata con successo', auction: newAuction });
+    res.status(HTTPStatus.CREATED).json({ message: 'Asta creata con successo', auction: newAuction });
   } catch (error: any) {
     console.error('Errore creazione asta:', error);
-    res.status(error.status || 500).json({ message: error.message || 'Errore interno del server' });
+    const err = ErrorFactory.createError(error.type || ErrorType.Generic, error.message);
+    res.status(err.status).json({ message: err.message });
   }
 };
 
@@ -87,9 +92,10 @@ export const getAuctions = async (req: AuthRequest, res: Response): Promise<void
     const { status } = req.query;
     const auctions = await auctionService.getAuctions(typeof status === 'string' ? status : undefined);
     res.json(auctions);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Errore lettura aste:', error);
-    res.status(500).json({ message: 'Errore interno del server' });
+    const err = ErrorFactory.createError(error.type || ErrorType.Generic, error.message);
+    res.status(err.status).json({ message: err.message });
   }
 };
 
@@ -103,13 +109,15 @@ export const joinAuction = async (req: AuthRequest, res: Response): Promise<void
     const userId = req.user?.id;
     const auctionId = req.body.auctionId;
     if (!userId) {
-      res.status(401).json({ message: 'Utente non autenticato' });
+      const err = ErrorFactory.createError(ErrorType.Authentication);
+      res.status(err.status).json({ message: err.message });
       return;
     }
     const result = await auctionService.joinAuction(userId, auctionId);
-    res.status(200).json(result);
-  } catch (err: any) {
-    res.status(err.status || 500).json({ message: err.message });
+    res.status(HTTPStatus.OK).json(result);
+  } catch (error: any) {
+    const err = ErrorFactory.createError(error.type || ErrorType.Generic, error.message);
+    res.status(err.status).json({ message: err.message });
   }
 };
 
@@ -136,7 +144,7 @@ export const closeAuction = async (req: AuthRequest, res: Response): Promise<voi
       finalAmount: result.finalAmount,
     });
   } catch (error: any) {
-    res.status(error.status || 500).json({ message: error.message });
+    res.status(error.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
@@ -152,7 +160,7 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response): Prom
     const auction = await auctionService.updateStatus(auctionId, status);
     res.status(200).json({ message: 'Stato dell\'asta aggiornato con successo', auction });
   } catch (error: any) {
-    res.status(error.status || 500).json({ message: error.message });
+    res.status(error.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
   }
 };
 
@@ -184,7 +192,7 @@ export const startAuction = async (req: AuthRequest, res: Response): Promise<voi
     }
   } catch (err: any) {
     console.error('Errore startAuction:', err);
-    res.status(err.status || 500).json({ message: err.message || 'Errore interno' });
+    res.status(err.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: err.message || 'Errore interno' });
   }
 };
 
