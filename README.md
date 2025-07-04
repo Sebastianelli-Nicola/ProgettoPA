@@ -21,45 +21,48 @@ Tutti i componenti sopra menzionati sono stati containerizzati utilizzando _Dock
 
 ---
 
-### ⚙️ Installazione
+### Installazione
 
-Clona il repository:
+Come prima cosa è necessario clonare il repository di GitHub:
 
 ```bash
 git clone <URL_DEL_REPO>
 ```
 
-Oppure scaricalo come ZIP da GitHub.
+Oppure scaricarlo come ZIP da GitHub.
 
-Assicurati di avere installato [Docker](https://docs.docker.com/engine/install/). Se stai usando Linux:
+Assicurati di avere installato [Docker](https://docs.docker.com/engine/install/). 
+
+Se stai usando Linux:
 
 ```bash
 sudo service docker start
 ```
 
-Oppure avvia **Docker Desktop**.
+Oppure avvia **Docker Desktop**, che è più intuitivo.
+Assicurati di avere tutti i file .env necessari per installare il software
 
-Una volta attivo Docker, spostati nella cartella del progetto ed esegui:
+Una volta attivo Docker, spostati nella cartella del progetto e tramite il terminale esegui:
 
 ```bash
 docker compose up
 ```
 
-L’applicazione sarà disponibile su:
+L’applicazione è ora configurata e sarà disponibile su:
 
 - **Backend**: http://localhost:3000  
 - **PostgreSQL**: configurato nella rete interna Docker  
 
-⚠️ **Nota**: al primo avvio il seeding è automatico.
+**Nota**: al primo avvio il seeding è automatico. Non sono necessarie operazioni sul database
 
 ---
 
-### 🧱 Architettura Backend
+### Architettura Backend
 
-L'architettura si compone di:
+L'architettura del backend si compone di:
 
-- **Express Container**: contiene la logica business, controller, DAO, e middleware.
-- **PostgreSQL**: database relazionale.
+- **Express Container**: Container con il framework Express, che si occupa di gestire tutta la logica business dell'applicazione, i controller, i DAO e i middleware.
+- **PostgreSQL**: database relazionale, gestito tramite Sequelize con modelli ORM per ogni entità.
 - **WebSocket Server**: per aggiornamenti in tempo reale su offerte e chiusure aste.
 
 #### Moduli principali
@@ -72,19 +75,19 @@ L'architettura si compone di:
 
 ---
 
-### 🔐 Autenticazione e Autorizzazione
+### Autenticazione e Autorizzazione
 
-L'autenticazione avviene tramite **JWT Token**, con ruoli:
+L'autenticazione avviene tramite **JWT Token**, ogni utente è associato ad uno dei seguenti ruoli:
 
-- `admin`
-- `bid-creator`
-- `bid-participant`
+- `admin` - gestione completa del sistema
+- `bid-creator` - creazione e gestione aste
+- `bid-participant` - partecipazione alle aste
 
 Ogni rotta è protetta da middleware personalizzati realizzati tramite il **pattern Chain of Responsibility**.
 
 ---
 
-### 📡 WebSocket
+### WebSocket
 
 Le comunicazioni in tempo reale sono gestite tramite WebSocket (`ws://localhost:3000`). 
 
@@ -100,18 +103,18 @@ Messaggi inviati:
 
 ---
 
-### 💰 Wallet e Pagamenti
+### Wallet e Pagamenti
 
 Ogni utente possiede un wallet:
 
-- Ricaricabile dagli `admin`
+- Gli `admin` possono ricaricare il credito
 - Il credito viene scalato all'iscrizione all'asta (quota + prezzo massimo)
 - Il vincitore riceve rimborso della differenza tra maxPrice e offerta vincente
 - Gli altri partecipanti ricevono il rimborso totale
 
 ---
 
-### 📈 Statistiche Utente
+### Statistiche Utente
 
 Ogni partecipante può visualizzare:
 
@@ -120,9 +123,9 @@ Ogni partecipante può visualizzare:
 
 ---
 
-### 🧪 Design Pattern Utilizzati
+### Design Pattern Utilizzati
 
-#### 🧱 Factory Pattern
+#### Factory Pattern
 
 Utilizzato per la gestione centralizzata degli errori. È stata definita una **classe `ErrorFactory`** che restituisce oggetti di errore a partire da un `enum`.
 
@@ -131,7 +134,7 @@ Utilizzato per la gestione centralizzata degli errori. È stata definita una **c
 - Consistenza nella gestione degli errori
 - Più facile loggare o monitorare
 
-#### 🔗 Chain of Responsibility
+#### Chain of Responsibility
 
 Utilizzato per strutturare i middleware:
 
@@ -145,35 +148,254 @@ Utilizzato per strutturare i middleware:
 
 ---
 
-### 📂 Rotte Principali
+### Rotte Principali
 
 #### `/auction`
 
 - `POST /` → crea una nuova asta (admin, bid-creator)
+    - **Corpo della richiesta**:
+
+    | Key                    | Value                                  |
+    |------------------------|----------------------------------------|
+    | `title`                | Titolo dell'asta                       |
+    | `minParticipants`      | Numero minimo di partecipanti          |
+    | `maxParticipants`      | Numero massimo di partecipanti         |
+    | `entryFee`             | Quota d'iscrizione                     |    
+    | `maxPrice`             | Prezzo massimo dell'asta               |
+    | `minIncrement`         | Incremento minimo dell'asta            |
+    | `bidsPerParticipant`   | Numero di puntate per partecipante     |
+    | `startTime`            | Ora e data d'inizio                    |
+    | `endTime`              | Ora e data di fine                     |
+    | `relaunchTime`         | Tempo per la fase di rilancio          |
+    | `status`               | Stato dell'asta                        |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+      "message": "Asta creata con successo",
+      "auction": {
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        "id": <Integer>,
+        "title": <String>,
+        "minParticipants": <Integer>,
+        "maxParticipants": <Integer>,
+        "entryFee": <Integer>,
+        "maxPrice": <Decimal>,
+        "minIncrement": <Decimal>,
+        "bidsPerParticipant": <Integer>,
+        "startTime": <DATE>,
+        "endTime": <DATE>,
+        "relaunchTime": <Integer>,
+        "status": <String>
+        }
+    }
+    ```
 - `GET /` → elenca tutte le aste
+    - **Esempio di risposta**:
+    ```json
+    {
+    {
+        "id": <Integer>,
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        "id": <Integer>,
+        "title": <String>,
+        "minParticipants": <Integer>,
+        "maxParticipants": <Integer>,
+        "entryFee": <Integer>,
+        "maxPrice": <Decimal>,
+        "minIncrement": <Decimal>,
+        "bidsPerParticipant": <Integer>,
+        "startTime": <DATE>,
+        "endTime": <DATE>,
+        "relaunchTime": <Integer>,
+        "status": <String>
+    },
+    {
+        "id": <Integer>,
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        "id": <Integer>,
+        "title": <String>,
+        "minParticipants": <Integer>,
+        "maxParticipants": <Integer>,
+        "entryFee": <Integer>,
+        "maxPrice": <Decimal>,
+        "minIncrement": <Decimal>,
+        "bidsPerParticipant": <Integer>,
+        "startTime": <DATE>,
+        "endTime": <DATE>,
+        "relaunchTime": <Integer>,
+        "status": <String>
+    }
+    }
+    ```
 - `POST /join` → iscriviti a un’asta (bid-participant)
-- `POST /:id/close` → chiude l’asta (admin, bid-creator)
-- `PATCH /:id/status` → aggiorna stato (admin, bid-creator)
-- `POST /:id/start` → avvia asta (admin, bid-creator)
+     - **Corpo della richiesta**:
+
+    | Key                 | Value                     |
+    |---------------------|---------------------------|
+    | `auctionId`         | Id dell'asta              |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+    "message": "Partecipazione registrata con successo"
+    }
+    ```
+- `POST /close` → chiude l’asta (admin, bid-creator)
+     - **Corpo della richiesta**:
+
+    | Key                 | Value                     |
+    |---------------------|---------------------------|
+    | `auctionId`         | Id dell'asta              |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+    "message": "L'asta non è nello stato \"bidding\""
+    }  
+    ```
+- `POST /start` → avvia asta (admin, bid-creator)
+     - **Corpo della richiesta**:
+
+   | Key                 | Value                     |
+   |---------------------|---------------------------|
+   | `auctionId`         | Id dell'asta              |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+    "message": "Asta avviata"
+    }
+    ```
 - `GET /history` → storico aste chiuse (bid-participant)
+ - **Corpo della richiesta**:
+
+    | Key              | Value                                               |
+    |------------------|-----------------------------------------------------|
+    | `from`           | Data inizio filtro                                  |
+    | `to`             | Data fine filtro                                    |
+    | `form`           | Formato in cui ottenere i dati                      |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+    "won": [ 
+        {
+        "id": <Integer>,
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        "id": <Integer>,
+        "title": <String>,
+        "minParticipants": <Integer>,
+        "maxParticipants": <Integer>,
+        "entryFee": <Integer>,
+        "maxPrice": <Decimal>,
+        "minIncrement": <Decimal>,
+        "bidsPerParticipant": <Integer>,
+        "startTime": <DATE>,
+        "endTime": <DATE>,
+        "relaunchTime": <Integer>,
+        "status": <String>,
+        "isWinner": <Boolean>,
+        }
+    ],
+    "lost": [
+        {
+         "id": <Integer>,
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        "id": <Integer>,
+        "title": <String>,
+        "minParticipants": <Integer>,
+        "maxParticipants": <Integer>,
+        "entryFee": <Integer>,
+        "maxPrice": <Decimal>,
+        "minIncrement": <Decimal>,
+        "bidsPerParticipant": <Integer>,
+        "startTime": <DATE>,
+        "endTime": <DATE>,
+        "relaunchTime": <Integer>,
+        "status": <String>,
+        "isWinner": <Boolean>,
+        }
+    ]
+    }
+      
+    ```
 
 #### `/wallet`
 
 - `GET /balance` → saldo wallet
+    - **Esempio di risposta**:
+    ```json
+    {
+    "balance": <Integer>
+    }
+    ```
 - `POST /recharge` → ricarica wallet (admin)
+     - **Corpo della richiesta**:
+
+    | Key                  | Value                           |
+    |----------------------|---------------------------------|
+    | `userId`             | Id dell'utente                  |
+    | `amount`             | Somma da ricaricare             |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+    "message": "Ricarica completata",
+    "balance": <Integer>
+    }
+    ```
 
 #### `/bid`
 
-- `POST /:id/bid` → piazza un’offerta (solo se partecipante iscritto)
+- `POST /bid` → piazza un’offerta (solo se partecipante iscritto)
+     - **Corpo della richiesta**:
+
+    | Key                 | Value                                |
+    |---------------------|--------------------------------------|
+    | `auctionId`         | Id dell'asta                         |
+    | `amount`            | Totale di quanto si vuole rilanciare |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+    "message": "Offerta registrata con successo",
+    "bid": {
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        "id": <Integer>,
+        "auctionId": <Integer>,
+        "userId": <Integer>,
+        "amount": <Integer>
+    }
+    }
+    ```
 
 #### `/user`
 
 - `POST /login`
-- `POST /register`
+     - **Corpo della richiesta**:
+
+    | Key                    | Value                                |
+    |------------------------|--------------------------------------|
+    | `email`                | Email dell'utente                    |
+    | `password`             | Password dell'utente                 |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+        "token": <created_auth_token>
+    }
+    ```
 
 ---
 
-### 📊 Diagrammi
+### Diagrammi
 
 - Use Case
 - Architettura
@@ -181,14 +403,14 @@ Utilizzato per strutturare i middleware:
 
 ---
 
-### 🧪 Test API
+### Test API
 
 Collezione Postman:  
 🔗 *[link al workspace Postman (se disponibile)]*
 
 ---
 
-### 🧩 Estensioni Future
+### Estensioni Future
 
 - Logica di scheduler automatico per chiusura aste
 - Dashboard per admin
