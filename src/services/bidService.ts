@@ -9,6 +9,7 @@ import { Auction } from '../models/Auction';
 import { Sequelize } from 'sequelize';
 import { BidDAO } from '../dao/bidDAO';
 import { ParticipationDAO } from '../dao/participationDAO';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 
 /**
  * Servizio per gestire le offerte nelle aste.
@@ -24,7 +25,7 @@ export class BidService {
    * @throws Errore se l'istanza di Sequelize non è trovata sul modello Auction.
    */
   private getSequelize(): Sequelize {
-    if (!Auction.sequelize) throw new Error('Sequelize instance not found on Auction model.');
+    if (!Auction.sequelize) throw ErrorFactory.createError(ErrorType.Generic, 'Sequelize instance not found on Auction model.');
     return Auction.sequelize;
   }
 
@@ -46,28 +47,30 @@ export class BidService {
         const auction = await Auction.findByPk(auctionId, { transaction });   // Trova l'asta per ID
 
         // Controlla se l'asta esiste
-        if (!auction) throw { status: 404, message: 'Asta non trovata' };
+        if (!auction) throw ErrorFactory.createError(ErrorType.AuctionNotFound);
 
         // Controlla se l'asta è nello stato "bidding"
-        if (auction.status !== 'bidding') throw { status: 400, message: 'L\'asta non è nello stato "bidding"' };
+        if (auction.status !== 'bidding'){
+          throw ErrorFactory.createError(ErrorType.BidsViewNotAllowed);
+        }
 
         // Controlla se l'utente ha partecipato all'asta
         const participation = await this.participationDAO.findParticipation(userId, auctionId, transaction);
-        if (!participation) throw { status: 403, message: 'Non hai partecipato a questa asta' };
+        if (!participation) throw ErrorFactory.createError(ErrorType.NotParticipant);
 
         // Controlla se l'utente ha esaurito le offerte disponibili
         const count = await this.bidDAO.countByAuctionAndUser(auctionId, userId, transaction);  // Conta le offerte dell'utente per l'asta
-        if (count >= auction.bidsPerParticipant) throw { status: 403, message: 'Hai esaurito le offerte disponibili per questa asta' };
+        if (count >= auction.bidsPerParticipant) throw ErrorFactory.createError(ErrorType.BidLimitReached);
 
         const lastBid = await this.bidDAO.findLastBid(auctionId, transaction);   // Trova l'ultima offerta per l'asta
         const lastAmount = lastBid ? Number(lastBid.amount) : 0;   // Ottiene l'importo dell'ultima offerta
         const minValid = lastAmount + Number(auction.minIncrement);   // Calcola l'importo minimo valido
 
         // Controlla se l'offerta è valida
-        if (amount < minValid) throw { status: 400, message: `L'offerta deve essere almeno di ${minValid}` };
+        if (amount < minValid) throw ErrorFactory.createError(ErrorType.Validation, `L'offerta deve essere almeno di ${minValid}`);
 
         // Controlla se l'offerta supera il prezzo massimo
-        if (amount > Number(auction.maxPrice)) throw { status: 400, message: `L'offerta non può superare il prezzo massimo di ${auction.maxPrice}` };
+        if (amount > Number(auction.maxPrice)) throw ErrorFactory.createError(ErrorType.Validation, `L'offerta non può superare il prezzo massimo di ${auction.maxPrice}`);
 
         const nowDate = new Date();   // Ottiene la data e ora attuale
 

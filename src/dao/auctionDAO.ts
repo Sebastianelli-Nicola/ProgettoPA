@@ -6,6 +6,7 @@
  */
 
 import { Auction, AuctionCreationAttributes } from '../models/Auction';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 import { Op, Transaction } from 'sequelize';
 
 export class AuctionDAO {
@@ -69,7 +70,7 @@ export class AuctionDAO {
    */
   async updateStatus(id: number, status: string, transaction?: Transaction): Promise<Auction> {
     const auction = await Auction.findByPk(id, { transaction });
-    if (!auction) throw { status: 404, message: 'Auction not found' };
+    if (!auction) throw ErrorFactory.createError(ErrorType.AuctionNotFound);
     auction.status = status as any;
     await auction.save({ transaction });
     return auction;

@@ -7,6 +7,8 @@
 import { UserDAO } from '../dao/userDAO';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
+import HTTPStatus from 'http-status-codes';
 
 // Tipo di ruolo consentito
 type AllowedRole = "admin" | "bid-creator" | "bid-participant";
@@ -29,19 +31,19 @@ export class UserService {
 
     // Controlla se mancano dati
     if (!email || !password || !role || !username) {
-      throw { status: 400, message: 'Dati mancanti' };
+      throw ErrorFactory.createError(ErrorType.MissingData);
     }
 
     // Controlla se l'email è già in uso
     const exists = await this.userDAO.findByEmail(email);
     if (exists) {
-      throw { status: 400, message: 'Email già in uso' };
+      throw ErrorFactory.createError(ErrorType.EmailAlreadyUse);
     }
 
     // Controlla se il nome utente è già in uso
     const usernameExists = await this.userDAO.findByUsername(username);
     if (usernameExists) {
-      throw { status: 400, message: 'Username già in uso' };
+      throw ErrorFactory.createError(ErrorType.UsernameAlreadyUse);
     }
 
     // Puoi decommentare per usare password hashata:
@@ -67,7 +69,7 @@ export class UserService {
 
     // Controlla se l'utente esiste
     if (!user) {
-      throw { status: 401, message: 'Credenziali non valide' };
+      throw ErrorFactory.createError(ErrorType.Authentication, 'Credenziali non valide');
     }
 
     // Se vuoi usare password hashata:
@@ -80,6 +82,11 @@ export class UserService {
     // if (user.password !== password) {
     //   throw { status: 401, message: 'Credenziali non valide' };
     // }
+
+    // Controlla se la password è corretta
+    if (user.password !== password) {
+      throw ErrorFactory.createError(ErrorType.Authentication, 'Credenziali non valide');
+    }
 
     // Crea un token JWT
     const token = jwt.sign(

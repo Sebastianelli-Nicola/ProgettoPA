@@ -75,7 +75,6 @@ export class AuctionService {
       const numericFields = [
         { key: 'minParticipants', value: data.minParticipants },
         { key: 'maxParticipants', value: data.maxParticipants },
-        //{ key: 'entryFee', value: data.entryFee },
         { key: 'maxPrice', value: data.maxPrice },
         { key: 'minIncrement', value: data.minIncrement },
         { key: 'bidsPerParticipant', value: data.bidsPerParticipant },
@@ -156,31 +155,42 @@ export class AuctionService {
       const auction = await this.auctionDAO.findById(auctionId, transaction);   // Trova l'asta per ID
 
       // Controlla se l'asta esiste
-      if (!auction) throw { status: 404, message: 'Asta non trovata' };
+      if (!auction){
+        throw ErrorFactory.createError(ErrorType.AuctionNotFound);
+      } 
 
       // Controlla se l'asta è nello stato "open"
-      if (auction.status !== 'open') throw { status: 400, message: 'L\'asta non è aperta per le iscrizioni' };
-
+      if (auction.status !== 'open') {
+        throw ErrorFactory.createError(ErrorType.AuctionNotOpen);
+      }
       const count = await this.participationDAO.countByAuction(auctionId, transaction); // Conta i partecipanti all'asta
       
       // Controlla se il numero di partecipanti ha raggiunto il massimo consentito
-      if (count >= auction.maxParticipants) throw { status: 400, message: 'Numero massimo di partecipanti raggiunto' };
+      if (count >= auction.maxParticipants) {
+        throw ErrorFactory.createError(ErrorType.MaxParticipantsReached);
+      }
 
       const wallet = await this.walletDAO.findByUserId(userId, transaction);  // Trova il wallet dell'utente
       
       // Controlla se il wallet esiste
-      if (!wallet) throw { status: 404, message: 'Wallet non trovato' };
+      if (!wallet){
+        throw ErrorFactory.createError(ErrorType.WalletNotFound);
+      } 
 
       const costoTotale = +auction.entryFee + +auction.maxPrice; // Calcola il costo totale per unirsi all'asta
       
       // Controlla se il saldo del wallet è sufficiente per coprire il costo
-      if (wallet.balance < costoTotale) throw { status: 400, message: 'Credito insufficiente' };
+      if (wallet.balance < costoTotale){
+        throw ErrorFactory.createError(ErrorType.InsufficientBalance);
+      }
 
       // Trova la partecipazione esistente
       const existing = await this.participationDAO.findParticipation(userId, auctionId, transaction);
 
       // Controlla se l'utente è già iscritto all'asta
-      if (existing) throw { status: 400, message: 'Utente già iscritto' };
+      if (existing) {
+        throw ErrorFactory.createError(ErrorType.AlreadyJoined);
+      }
 
       // Crea una nuova partecipazione
       await this.participationDAO.createParticipation({ userId, auctionId, fee: auction.entryFee }, transaction);

@@ -11,6 +11,7 @@
 
 import { BaseHandler } from '../BaseHandler'; // importa la tua classe BaseHandler
 import { Request, Response, NextFunction } from 'express';
+import { ErrorFactory, ErrorType } from '../../factory/errorFactory';
 
 /**
  * Interfaccia per la richiesta autenticata.
@@ -44,14 +45,12 @@ export class RoleHandler extends BaseHandler {
     
     // Verifica se l'utente è autenticato 
     if (!req.user) {
-      res.status(401).json({ message: 'Utente non autenticato' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.Authentication));
     }
 
     // Verifica se il ruolo dell'utente è tra quelli autorizzati
     if (!this.allowedRoles.includes(req.user.role)) {
-      res.status(403).json({ message: 'Accesso negato. Ruolo non autorizzato' });
-      return;
+      return next(ErrorFactory.createError(ErrorType.Authorization, 'Accesso negato. Ruolo non autorizzato'));
     }
 
     super.handle(req, res, next); // continua nella catena di handler

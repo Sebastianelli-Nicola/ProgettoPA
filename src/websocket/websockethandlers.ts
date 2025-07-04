@@ -13,6 +13,10 @@ import { getWSS } from './websocketServer';
 import { ParticipationDAO } from '../dao/participationDAO';
 import { AuctionDAO } from '../dao/auctionDAO';
 
+
+const participationDAO = new ParticipationDAO();
+const auctionDAO = new AuctionDAO();
+
 /**
  * Interfaccia per i messaggi inviati dai client.
  * Definisce il tipo di messaggio che il client può inviare al server.
@@ -55,27 +59,6 @@ interface AuctionClient extends WebSocket {
  * 
  * @param {WebSocket} ws - Il WebSocket del client connesso.
  */
-// export const handleWebSocketConnection = (ws: WebSocket): void => {
-//   const client = ws as AuctionClient; // estende WebSocket per includere auctionId
-
-
-//   ws.on('message', (message: string) => { 
-//     try {
-//       const data = JSON.parse(message) as ClientMessage;    // analizza il messaggio JSON ricevuto
-
-//       // Controlla se il messaggio è di tipo 'join' e contiene un ID asta
-//       if (data.type === 'join') {
-//         client.auctionId = data.auctionId;
-//         console.log(`[WS] Client collegato all'asta ${data.auctionId}`);
-//       }
-//     } catch (err) {
-//       console.error('[WS] Messaggio malformato:', message);
-//     }
-//   });
-
-//   ws.send(JSON.stringify({ message: 'Connessione WebSocket stabilita' }));    // invia un messaggio di conferma al client
-// };
-
 export const handleWebSocketConnection = (ws: WebSocket): void => {
   const client = ws as AuctionClient;
 

@@ -6,6 +6,7 @@
 
 import { WalletDAO } from '../dao/walletDAO';
 import { Wallet } from '../models/Wallet';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 
 /**
  * Servizio per gestire il portafoglio degli utenti.
@@ -20,7 +21,11 @@ export class WalletService {
    * @returns Il saldo del portafoglio.
    */
   async getWalletBalance(userId: number) {
-    return this.walletDAO.getBalance(userId);
+    const wallet = await this.walletDAO.getBalance(userId);
+    if (!wallet) {
+      throw ErrorFactory.createError(ErrorType.WalletNotFound);
+    }
+    return wallet;
   }
 
   /**
@@ -33,7 +38,8 @@ export class WalletService {
    */
   async rechargeWallet(userId: number, amount: number) {
     const sequelize = Wallet.sequelize;
-    if (!sequelize) throw new Error('Sequelize instance not found on Wallet model.');
+    if (!sequelize) throw ErrorFactory.createError(ErrorType.ServiceUnavailable, 'Sequelize instance not found on Wallet model.');
+    if (amount <= 0) throw ErrorFactory.createError(ErrorType.Validation, 'L\'importo deve essere maggiore di zero');
     return sequelize.transaction(async (transaction) => {
       return this.walletDAO.recharge(userId, amount, transaction);
     });

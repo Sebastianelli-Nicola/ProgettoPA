@@ -5,7 +5,7 @@
  * Ogni funzione gestisce la logica di business e restituisce risposte HTTP appropriate.
  */
 
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 import { AuctionService } from '../services/auctionService';
@@ -19,7 +19,7 @@ const auctionService = new AuctionService();
  * Valida i dati in ingresso e chiama il servizio per la creazione.
  * Restituisce la nuova asta creata o un errore se i dati sono mancanti o incompleti.
  */
-export const createAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const {
       title,
@@ -54,7 +54,7 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
       entryFee == null || maxPrice == null || minIncrement == null ||
       bidsPerParticipant == null || startTime == null || /*endTime == null ||*/ relaunchTime == null
     ) {
-      const err = ErrorFactory.createError(ErrorType.BadRequest, 'Dati mancanti o incompleti');
+      const err = ErrorFactory.createError(ErrorType.MissingData);
       res.status(err.status).json({ message: err.message });
       return;
     }
@@ -78,8 +78,7 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
     res.status(HTTPStatus.CREATED).json({ message: 'Asta creata con successo', auction: newAuction });
   } catch (error: any) {
     console.error('Errore creazione asta:', error);
-    const err = ErrorFactory.createError(error.type || ErrorType.Generic, error.message);
-    res.status(err.status).json({ message: err.message });
+    next(error);
   }
 };
 
@@ -87,15 +86,14 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
 /**
  * Restituisce la lista delle aste, eventualmente filtrate per stato.
  */
-export const getAuctions = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAuctions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { status } = req.query;
     const auctions = await auctionService.getAuctions(typeof status === 'string' ? status : undefined);
     res.json(auctions);
   } catch (error: any) {
     console.error('Errore lettura aste:', error);
-    const err = ErrorFactory.createError(error.type || ErrorType.Generic, error.message);
-    res.status(err.status).json({ message: err.message });
+    next(error);
   }
 };
 
@@ -104,7 +102,7 @@ export const getAuctions = async (req: AuthRequest, res: Response): Promise<void
  * Permette a un utente autenticato di unirsi a un'asta.
  * Richiede l'ID utente e l'ID dell'asta.
  */
-export const joinAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+export const joinAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user?.id;
     const auctionId = req.body.auctionId;
@@ -116,8 +114,7 @@ export const joinAuction = async (req: AuthRequest, res: Response): Promise<void
     const result = await auctionService.joinAuction(userId, auctionId);
     res.status(HTTPStatus.OK).json(result);
   } catch (error: any) {
-    const err = ErrorFactory.createError(error.type || ErrorType.Generic, error.message);
-    res.status(err.status).json({ message: err.message });
+    next(error);
   }
 };
 
@@ -126,10 +123,10 @@ export const joinAuction = async (req: AuthRequest, res: Response): Promise<void
  * Chiude un'asta e notifica i partecipanti tramite websocket.
  * Restituisce il vincitore e l'importo finale.
  */
-// export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
-//   try {
-//     const auctionId = parseInt(req.params.id);
-//     const result = await auctionService.closeAuction(auctionId);
+export const closeAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const auctionId = parseInt(req.params.id);
+    const result = await auctionService.closeAuction(auctionId);
 
 //     // Notifica la chiusura dell'asta tramite websocket
 //     broadcastToAuction(auctionId, {
@@ -138,29 +135,29 @@ export const joinAuction = async (req: AuthRequest, res: Response): Promise<void
 //       finalAmount: result.finalAmount,
 //     });
 
-//     res.status(200).json({
-//       message: 'Asta chiusa con successo',
-//       winnerId: result.winnerId,
-//       finalAmount: result.finalAmount,
-//     });
-//   } catch (error: any) {
-//     res.status(error.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
-//   }
-// };
+    res.status(HTTPStatus.OK).json({
+      message: 'Asta chiusa con successo',
+      winnerId: result.winnerId,
+      finalAmount: result.finalAmount,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
 
 
 /**
  * Aggiorna lo stato di un'asta.
  * Richiede l'ID dell'asta e il nuovo stato.
  */
-export const updateAuctionStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateAuctionStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const auctionId = parseInt(req.params.id);
     const { status } = req.body;
     const auction = await auctionService.updateStatus(auctionId, status);
-    res.status(200).json({ message: 'Stato dell\'asta aggiornato con successo', auction });
+    res.status(HTTPStatus.OK).json({ message: 'Stato asta aggiornato con successo', auction });
   } catch (error: any) {
-    res.status(error.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+    next(error);
   }
 };
 
@@ -170,7 +167,7 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response): Prom
  * Se i partecipanti sono insufficienti, chiude l'asta e notifica il motivo.
  * Altrimenti, avvia l'asta e notifica i partecipanti.
  */
-export const startAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+export const startAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const auctionId = parseInt(req.params.id);
     const result = await auctionService.startAuction(auctionId);
@@ -181,18 +178,18 @@ export const startAuction = async (req: AuthRequest, res: Response): Promise<voi
         type: 'auction_closed',
         reason: result.reason,
       });
-      res.status(200).json({ message: 'Asta chiusa per partecipanti insufficienti' });
+      res.status(HTTPStatus.OK).json({ message: 'Asta chiusa per partecipanti insufficienti' });
     } else if (result.started) {
       // Notifica l'avvio dell'asta
       broadcastToAuction(auctionId, {
         type: 'auction_started',
         auctionId,
       });
-      res.status(200).json({ message: 'Asta avviata' });
+      res.status(HTTPStatus.OK).json({ message: 'Asta avviata' });
     }
-  } catch (err: any) {
-    console.error('Errore startAuction:', err);
-    res.status(err.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: err.message || 'Errore interno' });
+  } catch (error: any) {
+    console.error('Errore startAuction:', error);
+    next(error);
   }
 };
 
