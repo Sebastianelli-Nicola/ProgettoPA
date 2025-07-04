@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { createAuction, getAuctions, joinAuction} from '../controllers/auctionController';
-import { closeAuction, updateAuctionStatus , startAuction} from '../controllers/auctionController';
+import { updateAuctionStatus , startAuction} from '../controllers/auctionController';
 import { authMiddlewareHandler } from '../middlewares/auth/authMiddlewareHandler';    
 
 const router = Router();
@@ -37,7 +37,7 @@ router.post('/join', authMiddlewareHandler.authWithRoles(['bid-participant']), j
  * Richiede autenticazione JWT
  * @param {string} id - ID dell'asta da chiudere
  */
-router.post('/:id/close', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), closeAuction);
+//router.post('/:id/close', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), closeAuction);
 
 /**
  * Rotta PATCH per aggiornare lo status di un'asta

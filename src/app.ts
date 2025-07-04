@@ -24,6 +24,7 @@ import auctionRoutes from "./routes/auction";
 import bidRoutes from './routes/bid';
 import walletRoutes from './routes/wallet';
 import statsRoutes from './routes/stats';
+import './scheduler';
 
 // Carica le variabili d'ambiente dal file .env
 dotenv.config();

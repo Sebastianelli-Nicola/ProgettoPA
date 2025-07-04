@@ -9,7 +9,7 @@ export default {
       {
         username: 'admin',
         email: 'admin@example.com',
-        password: 'hashedpassword1',
+        password: '$2a$12$x6YXp2X.36M59.qnYn5rTO7oNDqX9tcMxaOKRFtl8EBmJcEEs2vea', //hasedpassword1
         role: 'admin',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -33,7 +33,7 @@ export default {
       {
         username: 'participant1',
         email: 'participant1@example.com',
-        password: 'hashedpassword3',
+        password: '$2a$12$DrioUc0J5gL53xN0dhI4T.TrgCPhb5GL1qfCZ1MwMNO4eSyCD0aCS', //'hashedpassword3',
         role: 'bid-participant',
         createdAt: new Date(),
         updatedAt: new Date(),

@@ -30,7 +30,7 @@ interface AuctionAttributes {
 }
 
 // Definisce gli attributi per la creazione di una nuova asta
-export interface AuctionCreationAttributes extends Optional<AuctionAttributes, 'id' | 'status'> {}
+export interface AuctionCreationAttributes extends Optional<AuctionAttributes, 'id' | 'status' | 'endTime'> {}
 
 export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes> implements AuctionAttributes {
     public id!: number;

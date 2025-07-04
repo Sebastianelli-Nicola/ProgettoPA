@@ -45,11 +45,11 @@ export class UserService {
     }
 
     // Puoi decommentare per usare password hashata:
-    // const hashedPassword = await bcrypt.hash(password, 10);
-    // const user = await this.userDAO.createUser({ email, password: hashedPassword, role, username });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await this.userDAO.createUser({ email, password: hashedPassword, role, username });
 
     // Crea il nuovo utente
-    const user = await this.userDAO.createUser({ email, password, role, username });
+    //const user = await this.userDAO.createUser({ email, password, role, username });
     await this.userDAO.createWallet(user.id, 100);   // Crea un nuovo portafoglio con un saldo iniziale di 100
 
     return { message: 'Registrazione completata' };
@@ -71,15 +71,15 @@ export class UserService {
     }
 
     // Se vuoi usare password hashata:
-    // const match = await bcrypt.compare(password, user.password);
-    // if (!match) {
-    //   throw { status: 401, message: 'Credenziali non valide' };
-    // }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+    throw { status: 401, message: 'Credenziali non valide' };
+    }
 
     // Controlla se la password è corretta
-    if (user.password !== password) {
-      throw { status: 401, message: 'Credenziali non valide' };
-    }
+    // if (user.password !== password) {
+    //   throw { status: 401, message: 'Credenziali non valide' };
+    // }
 
     // Crea un token JWT
     const token = jwt.sign(

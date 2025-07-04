@@ -93,10 +93,11 @@ export class BidDAO {
    * @param auctionId ID dell'asta.
    * @returns Array di offerte ordinate per data di creazione crescente.
    */
-  async findBidsByAuctionId(auctionId: number) {
+  async findBidsByAuctionId(auctionId: number, transaction?: Transaction) {
     return Bid.findAll({
       where: { auctionId },
-      order: [['createdAt', 'ASC']]
+      order: [['createdAt', 'ASC']],
+      transaction,
     });
   }
 }

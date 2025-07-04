@@ -30,7 +30,7 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
       minIncrement,
       bidsPerParticipant,
       startTime,
-      endTime,
+      //endTime,
       relaunchTime,
       status
     } = req.body;
@@ -52,7 +52,7 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
     if (
       title == null || minParticipants == null || maxParticipants == null ||
       entryFee == null || maxPrice == null || minIncrement == null ||
-      bidsPerParticipant == null || startTime == null || endTime == null || relaunchTime == null
+      bidsPerParticipant == null || startTime == null || /*endTime == null ||*/ relaunchTime == null
     ) {
       const err = ErrorFactory.createError(ErrorType.BadRequest, 'Dati mancanti o incompleti');
       res.status(err.status).json({ message: err.message });
@@ -70,7 +70,7 @@ export const createAuction = async (req: AuthRequest, res: Response): Promise<vo
       minIncrement,
       bidsPerParticipant,
       startTime,
-      endTime,
+      //endTime,
       relaunchTime,
       status,
     });
@@ -126,27 +126,27 @@ export const joinAuction = async (req: AuthRequest, res: Response): Promise<void
  * Chiude un'asta e notifica i partecipanti tramite websocket.
  * Restituisce il vincitore e l'importo finale.
  */
-export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const auctionId = parseInt(req.params.id);
-    const result = await auctionService.closeAuction(auctionId);
+// export const closeAuction = async (req: AuthRequest, res: Response): Promise<void> => {
+//   try {
+//     const auctionId = parseInt(req.params.id);
+//     const result = await auctionService.closeAuction(auctionId);
 
-    // Notifica la chiusura dell'asta tramite websocket
-    broadcastToAuction(auctionId, {
-      type: 'auction_closed',
-      winnerId: result.winnerId,
-      finalAmount: result.finalAmount,
-    });
+//     // Notifica la chiusura dell'asta tramite websocket
+//     broadcastToAuction(auctionId, {
+//       type: 'auction_closed',
+//       winnerId: result.winnerId,
+//       finalAmount: result.finalAmount,
+//     });
 
-    res.status(200).json({
-      message: 'Asta chiusa con successo',
-      winnerId: result.winnerId,
-      finalAmount: result.finalAmount,
-    });
-  } catch (error: any) {
-    res.status(error.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
-  }
-};
+//     res.status(200).json({
+//       message: 'Asta chiusa con successo',
+//       winnerId: result.winnerId,
+//       finalAmount: result.finalAmount,
+//     });
+//   } catch (error: any) {
+//     res.status(error.status || HTTPStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+//   }
+// };
 
 
 /**
