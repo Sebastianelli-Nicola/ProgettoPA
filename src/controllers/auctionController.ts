@@ -119,27 +119,27 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
  * Chiude un'asta e notifica i partecipanti tramite websocket.
  * Restituisce il vincitore e l'importo finale.
  */
-// export const closeAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-//   try {
-//     const auctionId = parseInt(req.body.auctionId);
-//     const result = await auctionService.closeAuction(auctionId);
+export const closeAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const auctionId = parseInt(req.body.auctionId);
+    const result = await auctionService.closeAuction(auctionId);
 
-// //     // Notifica la chiusura dell'asta tramite websocket
-// //     broadcastToAuction(auctionId, {
-// //       type: 'auction_closed',
-// //       winnerId: result.winnerId,
-// //       finalAmount: result.finalAmount,
-// //     });
+    // Notifica la chiusura dell'asta tramite websocket
+    broadcastToAuction(auctionId, {
+      type: 'auction_closed',
+      winnerId: result.winnerId,
+      finalAmount: result.finalAmount,
+    });
 
-//     res.status(HTTPStatus.OK).json({
-//       message: 'Asta chiusa con successo',
-//       winnerId: result.winnerId,
-//       finalAmount: result.finalAmount,
-//     });
-//   } catch (error: any) {
-//     next(error);
-//   }
-// };
+    res.status(HTTPStatus.OK).json({
+      message: 'Asta chiusa con successo',
+      winnerId: result.winnerId,
+      finalAmount: result.finalAmount,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
 
 
 /**
