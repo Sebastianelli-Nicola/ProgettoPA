@@ -111,35 +111,6 @@ export class StatsService {
   };
 }
 
-  // async getUserExpenses(userId: number, from?: Date, to?: Date) {
-
-  //   // Recupera tutte le partecipazioni dell'utente nel periodo specificato
-  //   const participations = await this.statsDAO.findParticipations(userId, from, to); 
-
-  //   let totalFees = 0.00;              // Totale delle fee di partecipazione
-  //   let totalSpentOnWins = 0.00;       // Totale speso per le aste vinte
-
-  //   // Scorre tutte le partecipazioni per calcolare le spese
-  //   for (const p of participations) {
-  //     totalFees += p.fee;           // Somma la fee di partecipazione
-  //     if (p.isWinner) {
-  //        // Se l'utente ha vinto l'asta, aggiungi anche l'importo dell'offerta vincente
-  //       const winningBid = await this.statsDAO.findWinningBid(userId, p.auctionId);
-  //       if (winningBid) totalSpentOnWins += Number(winningBid.amount);
-  //     }
-  //   }
-
-  //    // Restituisce un oggetto riepilogativo delle spese
-  //   return {
-  //     userId,
-  //     totalParticipationFees: totalFees,          // Totale fee di partecipazione
-  //     totalWinningSpending: totalSpentOnWins,     // Totale speso per le aste vinte
-  //     total: totalFees + totalSpentOnWins,        // Totale complessivo
-  //     from: from || null,
-  //     to: to || null,
-  //   };
-  // }
-
   /**
    * Ottiene lo storico delle aste alle quali si è partecipato distinguendo per quelle che 
    * sono state aggiudicate e non. 
