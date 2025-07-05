@@ -121,7 +121,7 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
  */
 // export const closeAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
 //   try {
-//     const auctionId = parseInt(req.params.id);
+//     const auctionId = parseInt(req.body.auctionId);
 //     const result = await auctionService.closeAuction(auctionId);
 
 // //     // Notifica la chiusura dell'asta tramite websocket
@@ -148,7 +148,7 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
  */
 export const updateAuctionStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const auctionId = parseInt(req.params.id);
+    const auctionId = parseInt(req.body.auctionId);
     const { status } = req.body;
     const auction = await auctionService.updateStatus(auctionId, status);
     res.status(HTTPStatus.OK).json({ message: 'Stato asta aggiornato con successo', auction });
@@ -165,7 +165,7 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response, next:
  */
 export const startAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const auctionId = parseInt(req.params.id);
+    const auctionId = parseInt(req.body.auctionId);
     const result = await auctionService.startAuction(auctionId);
 
     // Notifica la chiusura per partecipanti insufficienti

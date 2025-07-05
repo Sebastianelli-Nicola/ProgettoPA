@@ -67,13 +67,25 @@ export class WalletDAO {
    */
   async recharge(userId: number, amount: number, transaction?: any): Promise<Wallet> {
     const wallet = await Wallet.findOne({ where: { userId }, transaction });
+
     if (!wallet) {
       throw ErrorFactory.createError(ErrorType.WalletNotFound);
     }
-    wallet.balance += Number(amount);
+
+    // Converte tutto in numeri con 2 decimali
+    const currentBalance = parseFloat(wallet.balance as unknown as string);
+    const rechargeAmount = parseFloat(amount.toFixed(2));
+
+    const newBalance = parseFloat((currentBalance + rechargeAmount).toFixed(2));
+
+    wallet.balance = newBalance;
+
     await wallet.save({ transaction });
+
     return wallet;
   }
+
+
 
 
   /**

@@ -37,7 +37,7 @@ router.post('/join', authMiddlewareHandler.authWithRoles(['bid-participant']), j
  * Richiede autenticazione JWT
  * @param {string} id - ID dell'asta da chiudere
  */
-//router.post('/:id/close', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), closeAuction);
+//router.post('/close', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), closeAuction);
 
 /**
  * Rotta PATCH per aggiornare lo status di un'asta
@@ -45,15 +45,15 @@ router.post('/join', authMiddlewareHandler.authWithRoles(['bid-participant']), j
  * Richiede autenticazione JWT
  * @param {string} id - ID dell'asta da aggiornare
  */
-router.patch('/:id/status', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), updateAuctionStatus);
+router.patch('/status', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), updateAuctionStatus);
 
 /**
  * Rotta POST per avviare un'asta
- * Solo gli utenti con ruolo 'admin' o 'bid-creator' possono avviare un'asta
+ * Solo gli utenti con ruolo 'admin' possono avviare un'asta
  * Richiede autenticazione JWT
  * @param {string} id - ID dell'asta da avviare
  */
-router.post('/:id/start', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), startAuction);
+router.post('/start', authMiddlewareHandler.authWithRoles(['bid-creator']), startAuction);
 
 
 export default router;

@@ -10,6 +10,7 @@ import { Bid } from '../models/Bid';
 import { ParticipationDAO } from '../dao/participationDAO';
 import { Op } from 'sequelize';
 import { AuctionDAO } from './auctionDAO';
+import { BidDAO } from '../dao/bidDAO';
 
 export class StatsDAO {
   private static instance: StatsDAO;
@@ -97,33 +98,75 @@ export class StatsDAO {
    */
   async getAuctionHistory(userId: number, from?: Date, to?: Date) {
     const participationDAO = ParticipationDAO.getInstance();
+    const auctionDAO = AuctionDAO.getInstance();
+    const bidDAO = BidDAO.getInstance();
 
     // Recupera tutte le partecipazioni dell'utente nel periodo
     const participations = await participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
-
-    // Estrae tutti gli ID delle aste a cui ha partecipato
     const auctionIds = participations.map(p => p.auctionId);
 
-    // Recupera tutte le aste chiuse tra quelle partecipate
-    const auctionDAO = AuctionDAO.getInstance();
+    // Recupera tutte le aste chiuse a cui ha partecipato
     const auctions = await auctionDAO.findAllClosed(auctionIds);
 
-    // Mappa per associare una partecipazione a un'asta
+    // Crea una mappa per accedere rapidamente alle partecipazioni
     const participationMap = new Map<number, any>();
     participations.forEach(p => participationMap.set(p.auctionId, p));
 
-    // Arricchisce ogni asta con info se è stata aggiudicata dall'utente
-    const history = auctions.map(a => ({
-      ...a.toJSON(),
-      isWinner: participationMap.get(a.id)?.isWinner || false
+    // Per ogni asta chiusa, calcola info aggiuntive
+    const history = await Promise.all(auctions.map(async auction => {
+      const participation = participationMap.get(auction.id);
+      
+      let userBidTotal = 0;
+      if (participation) {
+        userBidTotal = await bidDAO.countByAuctionAndUser(auction.id, userId)
+          .then(count => count * Number(auction.minIncrement)); // o calcola la somma reale se hai `Bid.amount`
+      }
+
+      const totalCost = Number(participation?.fee || 0) + userBidTotal;
+
+      return {
+        ...auction.toJSON(),
+        isWinner: participation?.isWinner || false,
+        endTime: auction.endTime,
+        totalCost
+      };
     }));
 
-    // Divide tra aste aggiudicate e non aggiudicate
     const won = history.filter(a => a.isWinner);
     const lost = history.filter(a => !a.isWinner);
 
     return { won, lost };
   }
+
+  // async getAuctionHistory(userId: number, from?: Date, to?: Date) {
+  //   const participationDAO = ParticipationDAO.getInstance();
+
+  //   // Recupera tutte le partecipazioni dell'utente nel periodo
+  //   const participations = await participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
+
+  //   // Estrae tutti gli ID delle aste a cui ha partecipato
+  //   const auctionIds = participations.map(p => p.auctionId);
+
+  //   // Recupera tutte le aste chiuse tra quelle partecipate
+  //   const auctionDAO = AuctionDAO.getInstance();
+  //   const auctions = await auctionDAO.findAllClosed(auctionIds);
+
+  //   // Mappa per associare una partecipazione a un'asta
+  //   const participationMap = new Map<number, any>();
+  //   participations.forEach(p => participationMap.set(p.auctionId, p));
+
+  //   // Arricchisce ogni asta con info se è stata aggiudicata dall'utente
+  //   const history = auctions.map(a => ({
+  //     ...a.toJSON(),
+  //     isWinner: participationMap.get(a.id)?.isWinner || false
+  //   }));
+
+  //   // Divide tra aste aggiudicate e non aggiudicate
+  //   const won = history.filter(a => a.isWinner);
+  //   const lost = history.filter(a => !a.isWinner);
+
+  //   return { won, lost };
+  // }
 
 }
 

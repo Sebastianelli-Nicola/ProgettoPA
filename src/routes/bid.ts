@@ -15,12 +15,12 @@ const router = Router(); //
  * @param {string} id - ID dell'asta su cui si vuole fare un'offerta
  * @returns {object} - Dettagli dell'offerta effettuata
  */
-router.post('/:id/bid', authMiddlewareHandler.authWithRoles(['bid-participant']), placeBid);
+router.post('/', authMiddlewareHandler.authWithRoles(['bid-participant']), placeBid);
 
 /**
  * Rotta GET per visualizzare l'elenco dei rilanci di un'asta.
  * Accessibile solo ai partecipanti o al creatore, solo se l'asta è in fase "bidding".
  */
-router.get('/:id/bids', authMiddlewareHandler.authWithRoles(['bid-participant', 'bid-creator', 'admin']), getBidsForAuction);
+router.get('/all', authMiddlewareHandler.authWithRoles(['bid-participant', 'bid-creator']), getBidsForAuction);
 
 export default router;

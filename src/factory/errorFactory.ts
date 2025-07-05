@@ -18,6 +18,7 @@ export enum ErrorType {
   MissingData,
   InvalidFromDate, 
   InvalidToDate, 
+  InvalidRole,
   AuctionNotOpen,              
   MaxParticipantsReached,      
   AlreadyJoined,   
@@ -138,6 +139,12 @@ class InvalidFromDateError extends ApplicationError {
 class InvalidToDateError extends ApplicationError {
   constructor(message = 'Parametro "to" non è una data valida') {
     super('InvalidToDateError', message, StatusCodes.BAD_REQUEST);
+  }
+}
+
+class InvalidRoleError extends ApplicationError {
+  constructor(message = 'Il ruolo può essere solo: admin, bid-creator o bid-participant') {
+    super('InvalidRoleError', message, StatusCodes.BAD_REQUEST);
   }
 }
 
@@ -287,6 +294,8 @@ export class ErrorFactory {
         return new InvalidFromDateError(message);
       case ErrorType.InvalidToDate:
         return new InvalidToDateError(message);
+      case ErrorType.InvalidRole:
+        return new InvalidRoleError(message);
       case ErrorType.AuctionNotOpen:
         return new AuctionNotOpenError(message);
       case ErrorType.MaxParticipantsReached:

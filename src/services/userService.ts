@@ -13,6 +13,7 @@ import HTTPStatus from 'http-status-codes';
 // Tipo di ruolo consentito
 type AllowedRole = "admin" | "bid-creator" | "bid-participant";
 
+const allowedRoles: AllowedRole[] = ["admin", "bid-creator", "bid-participant"];
 
 /**
  * Servizio per gestire gli utenti.
@@ -27,8 +28,9 @@ export class UserService {
    * @returns Un messaggio di conferma.
    */
   async register(data: { email: string, password: string, role: AllowedRole, username: string }) {
+    
     const { email, password, role, username } = data;  // Destruttura i dati dell'utente
-
+    
     // Controlla se mancano dati
     if (!email || !password || !role || !username) {
       throw ErrorFactory.createError(ErrorType.MissingData);
@@ -44,6 +46,11 @@ export class UserService {
     const usernameExists = await this.userDAO.findByUsername(username);
     if (usernameExists) {
       throw ErrorFactory.createError(ErrorType.UsernameAlreadyUse);
+    }
+
+    // Controlla che il ruolo sia valido
+    if (!allowedRoles.includes(role)) {
+      throw ErrorFactory.createError(ErrorType.InvalidRole);
     }
 
     // Puoi decommentare per usare password hashata:
@@ -75,16 +82,6 @@ export class UserService {
     // Se vuoi usare password hashata:
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      throw ErrorFactory.createError(ErrorType.Authentication, 'Credenziali non valide');
-    }
-
-    // Controlla se la password è corretta
-    // if (user.password !== password) {
-    //   throw { status: 401, message: 'Credenziali non valide' };
-    // }
-
-    // Controlla se la password è corretta
-    if (user.password !== password) {
       throw ErrorFactory.createError(ErrorType.Authentication, 'Credenziali non valide');
     }
 

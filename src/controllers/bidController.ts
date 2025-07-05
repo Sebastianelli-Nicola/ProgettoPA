@@ -25,7 +25,7 @@ const participationDAO = ParticipationDAO.getInstance();
  */
 export const placeBid = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const auctionId = parseInt(req.params.id);
+    const auctionId = parseInt(req.body.auctionId);
     const userId = req.user?.id;
     const { amount } = req.body;
 
@@ -74,7 +74,7 @@ export const placeBid = async (req: AuthRequest, res: Response, next: NextFuncti
  */
 export const getBidsForAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const auctionId = parseInt(req.params.id);
+    const auctionId = parseInt(req.body.auctionId);
     const userId = req.user?.id;
 
     if (!userId) {

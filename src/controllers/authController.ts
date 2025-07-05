@@ -22,7 +22,6 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     const result = await userService.register(req.body);
     res.status(HTTPStatus.CREATED).json(result);     // Utente creato con successo
   } catch (error: any) {
-    console.error(error);
     next(error);
   }
 };
