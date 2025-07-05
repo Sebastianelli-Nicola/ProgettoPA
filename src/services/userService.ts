@@ -75,7 +75,7 @@ export class UserService {
     // Se vuoi usare password hashata:
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-    throw { status: 401, message: 'Credenziali non valide' };
+      throw ErrorFactory.createError(ErrorType.Authentication, 'Credenziali non valide');
     }
 
     // Controlla se la password è corretta

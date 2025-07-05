@@ -14,9 +14,6 @@ import { ParticipationDAO } from '../dao/participationDAO';
 import { AuctionDAO } from '../dao/auctionDAO';
 
 
-// const participationDAO = new ParticipationDAO();
-// const auctionDAO = new AuctionDAO();
-
 /**
  * Interfaccia per i messaggi inviati dai client.
  * Definisce il tipo di messaggio che il client può inviare al server.

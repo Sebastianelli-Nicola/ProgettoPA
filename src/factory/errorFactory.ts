@@ -9,9 +9,10 @@ export enum ErrorType {
   AuctionNotFound,
   ParticipationNotFound,
   WalletNotFound,
+  WinnerNotFound, 
   BidsViewNotAllowed,      
   BidsViewNotAuthorized,
-  NotParticipant,       
+  NotParticipant,      
   BidLimitReached,
   InsufficientBalance,
   MissingData,
@@ -113,6 +114,12 @@ class BidsViewNotAuthorizedError extends ApplicationError {
 class NotParticipantError extends ApplicationError {
   constructor(message = 'Non hai partecipato a questa asta') {
     super('NotParticipantError', message, StatusCodes.FORBIDDEN);
+  }
+}
+
+class WinnerNotFoundError extends ApplicationError {
+  constructor(message = 'Nessun vincitore trovato') {
+    super('WinnerNotFoundError', message, StatusCodes.NOT_FOUND);
   }
 }
 
@@ -264,6 +271,8 @@ export class ErrorFactory {
         return new AuctionNotFoundError(message);
       case ErrorType.ParticipationNotFound:
         return new ParticipationNotFoundError(message);
+      case ErrorType.WinnerNotFound:
+        return new WinnerNotFoundError(message);
       case ErrorType.WalletNotFound:
         return new WalletNotFoundError(message);
       case ErrorType.BidsViewNotAllowed:

@@ -54,9 +54,7 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
       entryFee == null || maxPrice == null || minIncrement == null ||
       bidsPerParticipant == null || startTime == null || /*endTime == null ||*/ relaunchTime == null
     ) {
-      const err = ErrorFactory.createError(ErrorType.MissingData);
-      res.status(err.status).json({ message: err.message });
-      return;
+      return next(ErrorFactory.createError(ErrorType.MissingData));
     }
 
 
@@ -107,9 +105,7 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
     const userId = req.user?.id;
     const auctionId = req.body.auctionId;
     if (!userId) {
-      const err = ErrorFactory.createError(ErrorType.Authentication);
-      res.status(err.status).json({ message: err.message });
-      return;
+      return next(ErrorFactory.createError(ErrorType.Authentication));
     }
     const result = await auctionService.joinAuction(userId, auctionId);
     res.status(HTTPStatus.OK).json(result);
