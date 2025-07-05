@@ -102,6 +102,13 @@ export class AuctionDAO {
         status: 'closed' // Prendi solo le aste chiuse
       }, order: [['createdAt', 'DESC']] });
   }
+  async findAll(status: string[], startTime: Date): Promise<Auction[]> {
+    return Auction.findAll(
+      { where: {
+        status: status, // Prendi solo le aste chiuse
+        startTime: { [Op.lte]: startTime },
+      }, order: [['createdAt', 'DESC']] });
+  }
   
 }
 

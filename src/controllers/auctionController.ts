@@ -54,9 +54,7 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
       entryFee == null || maxPrice == null || minIncrement == null ||
       bidsPerParticipant == null || startTime == null || /*endTime == null ||*/ relaunchTime == null
     ) {
-      const err = ErrorFactory.createError(ErrorType.MissingData);
-      res.status(err.status).json({ message: err.message });
-      return;
+      return next(ErrorFactory.createError(ErrorType.MissingData));
     }
 
 
@@ -107,9 +105,7 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
     const userId = req.user?.id;
     const auctionId = req.body.auctionId;
     if (!userId) {
-      const err = ErrorFactory.createError(ErrorType.Authentication);
-      res.status(err.status).json({ message: err.message });
-      return;
+      return next(ErrorFactory.createError(ErrorType.Authentication));
     }
     const result = await auctionService.joinAuction(userId, auctionId);
     res.status(HTTPStatus.OK).json(result);
@@ -123,27 +119,27 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
  * Chiude un'asta e notifica i partecipanti tramite websocket.
  * Restituisce il vincitore e l'importo finale.
  */
-export const closeAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const auctionId = parseInt(req.params.id);
-    const result = await auctionService.closeAuction(auctionId);
+// export const closeAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+//   try {
+//     const auctionId = parseInt(req.params.id);
+//     const result = await auctionService.closeAuction(auctionId);
 
-//     // Notifica la chiusura dell'asta tramite websocket
-//     broadcastToAuction(auctionId, {
-//       type: 'auction_closed',
+// //     // Notifica la chiusura dell'asta tramite websocket
+// //     broadcastToAuction(auctionId, {
+// //       type: 'auction_closed',
+// //       winnerId: result.winnerId,
+// //       finalAmount: result.finalAmount,
+// //     });
+
+//     res.status(HTTPStatus.OK).json({
+//       message: 'Asta chiusa con successo',
 //       winnerId: result.winnerId,
 //       finalAmount: result.finalAmount,
 //     });
-
-    res.status(HTTPStatus.OK).json({
-      message: 'Asta chiusa con successo',
-      winnerId: result.winnerId,
-      finalAmount: result.finalAmount,
-    });
-  } catch (error: any) {
-    next(error);
-  }
-};
+//   } catch (error: any) {
+//     next(error);
+//   }
+// };
 
 
 /**

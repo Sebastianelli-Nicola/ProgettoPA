@@ -36,9 +36,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      const err = ErrorFactory.createError(ErrorType.MissingCredentials);
-      res.status(err.status).json({ message: err.message });
-      return;
+      return next(ErrorFactory.createError(ErrorType.MissingCredentials));
     }
     
     const result = await userService.login(email, password);
