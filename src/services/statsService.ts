@@ -80,33 +80,36 @@ export class StatsService {
    * @returns Le spese dell'utente.
    */
   async getUserExpenses(userId: number, from?: Date, to?: Date) {
+  // Recupera tutte le partecipazioni dell'utente nel periodo specificato
+  const participations = await this.statsDAO.findParticipations(userId, from, to);
 
-    // Recupera tutte le partecipazioni dell'utente nel periodo specificato
-    const participations = await this.statsDAO.findParticipations(userId, from, to); 
+  let totalFees = 0;
+  let totalSpentOnWins = 0;
 
-    let totalFees = 0;              // Totale delle fee di partecipazione
-    let totalSpentOnWins = 0;       // Totale speso per le aste vinte
+  for (const p of participations) {
+    const fee = typeof p.fee === 'string' ? parseFloat(p.fee) : p.fee;
+    totalFees += fee;
 
-    // Scorre tutte le partecipazioni per calcolare le spese
-    for (const p of participations) {
-      totalFees += p.fee;           // Somma la fee di partecipazione
-      if (p.isWinner) {
-         // Se l'utente ha vinto l'asta, aggiungi anche l'importo dell'offerta vincente
-        const winningBid = await this.statsDAO.findWinningBid(userId, p.auctionId);
-        if (winningBid) totalSpentOnWins += Number(winningBid.amount);
+    if (p.isWinner) {
+      const winningBid = await this.statsDAO.findWinningBid(userId, p.auctionId);
+      if (winningBid) {
+        const amount = typeof winningBid.amount === 'string' ? parseFloat(winningBid.amount) : winningBid.amount;
+        totalSpentOnWins += amount;
       }
     }
-
-     // Restituisce un oggetto riepilogativo delle spese
-    return {
-      userId,
-      totalParticipationFees: totalFees,          // Totale fee di partecipazione
-      totalWinningSpending: totalSpentOnWins,     // Totale speso per le aste vinte
-      total: totalFees + totalSpentOnWins,        // Totale complessivo
-      from: from || null,
-      to: to || null,
-    };
   }
+
+  const total = totalFees + totalSpentOnWins;
+
+    return {
+    userId,
+    totalParticipationFees: totalFees.toFixed(2),       
+    totalWinningSpending: totalSpentOnWins.toFixed(2),   
+    total: (totalFees + totalSpentOnWins).toFixed(2),    
+    from: from || null,
+    to: to || null,
+  };
+}
 
   /**
    * Ottiene lo storico delle aste alle quali si è partecipato distinguendo per quelle che 

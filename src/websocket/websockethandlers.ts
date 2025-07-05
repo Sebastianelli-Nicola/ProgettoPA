@@ -14,8 +14,8 @@ import { ParticipationDAO } from '../dao/participationDAO';
 import { AuctionDAO } from '../dao/auctionDAO';
 
 
-const participationDAO = new ParticipationDAO();
-const auctionDAO = new AuctionDAO();
+// const participationDAO = new ParticipationDAO();
+// const auctionDAO = new AuctionDAO();
 
 /**
  * Interfaccia per i messaggi inviati dai client.
