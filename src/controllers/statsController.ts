@@ -10,7 +10,6 @@ import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { StatsService } from '../services/statsService';
 import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 import HTTPStatus from 'http-status-codes';
-import PDFDocument from 'pdfkit';
 
 const statsService = new StatsService();
 

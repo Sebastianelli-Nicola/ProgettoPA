@@ -14,6 +14,22 @@ import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 
 const auctionService = new AuctionService();
 
+
+/**
+ * Restituisce la lista delle aste, eventualmente filtrate per stato.
+ */
+export const getAuctions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { status } = req.query;
+    const auctions = await auctionService.getAuctions(typeof status === 'string' ? status : undefined);
+    res.json(auctions);
+  } catch (error: any) {
+    console.error('Errore lettura aste:', error);
+    next(error);
+  }
+};
+
+
 /**
  * Crea una nuova asta.
  * Valida i dati in ingresso e chiama il servizio per la creazione.
@@ -30,20 +46,9 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
       bidIncrement,
       bidsPerParticipant,
       startTime,
-      //endTime,
       relaunchTime,
       status
     } = req.body;
-
-    // // Verifica la presenza di tutti i dati obbligatori
-    // if (
-    //   !title || !minParticipants || !maxParticipants ||
-    //   !entryFee || !maxPrice || !minIncrement ||
-    //   !bidsPerParticipant || !startTime || !endTime || !relaunchTime
-    // ) {
-    //   res.status(400).json({ message: 'Dati mancanti o incompleti' });
-    //   return;
-    // }
 
 
     const creatorId = req.user?.id;
@@ -68,7 +73,6 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
       bidIncrement,
       bidsPerParticipant,
       startTime,
-      //endTime,
       relaunchTime,
       status,
     });
@@ -76,21 +80,6 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
     res.status(HTTPStatus.CREATED).json({ message: 'Asta creata con successo', auction: newAuction });
   } catch (error: any) {
     console.error('Errore creazione asta:', error);
-    next(error);
-  }
-};
-
-
-/**
- * Restituisce la lista delle aste, eventualmente filtrate per stato.
- */
-export const getAuctions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { status } = req.query;
-    const auctions = await auctionService.getAuctions(typeof status === 'string' ? status : undefined);
-    res.json(auctions);
-  } catch (error: any) {
-    console.error('Errore lettura aste:', error);
     next(error);
   }
 };
@@ -110,6 +99,38 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
     const result = await auctionService.joinAuction(userId, auctionId);
     res.status(HTTPStatus.OK).json(result);
   } catch (error: any) {
+    next(error);
+  }
+};
+
+
+/**
+ * Avvia un'asta.
+ * Se i partecipanti sono insufficienti, chiude l'asta e notifica il motivo.
+ * Altrimenti, avvia l'asta e notifica i partecipanti.
+ */
+export const startAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const auctionId = parseInt(req.body.auctionId);
+    const result = await auctionService.startAuction(auctionId);
+
+    // Notifica la chiusura per partecipanti insufficienti
+    if (result.closed) {
+      broadcastToAuction(auctionId, {
+        type: 'auction_closed',
+        reason: result.reason,
+      });
+      res.status(HTTPStatus.OK).json({ message: 'Asta chiusa per partecipanti insufficienti' });
+    } else if (result.started) {
+      // Notifica l'avvio dell'asta
+      broadcastToAuction(auctionId, {
+        type: 'auction_started',
+        auctionId,
+      });
+      res.status(HTTPStatus.OK).json({ message: 'Asta avviata' });
+    }
+  } catch (error: any) {
+    console.error('Errore startAuction:', error);
     next(error);
   }
 };
@@ -158,34 +179,5 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response, next:
 };
 
 
-/**
- * Avvia un'asta.
- * Se i partecipanti sono insufficienti, chiude l'asta e notifica il motivo.
- * Altrimenti, avvia l'asta e notifica i partecipanti.
- */
-export const startAuction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const auctionId = parseInt(req.body.auctionId);
-    const result = await auctionService.startAuction(auctionId);
 
-    // Notifica la chiusura per partecipanti insufficienti
-    if (result.closed) {
-      broadcastToAuction(auctionId, {
-        type: 'auction_closed',
-        reason: result.reason,
-      });
-      res.status(HTTPStatus.OK).json({ message: 'Asta chiusa per partecipanti insufficienti' });
-    } else if (result.started) {
-      // Notifica l'avvio dell'asta
-      broadcastToAuction(auctionId, {
-        type: 'auction_started',
-        auctionId,
-      });
-      res.status(HTTPStatus.OK).json({ message: 'Asta avviata' });
-    }
-  } catch (error: any) {
-    console.error('Errore startAuction:', error);
-    next(error);
-  }
-};
 

@@ -103,6 +103,14 @@ export class AuctionDAO {
       }, order: [['createdAt', 'DESC']] });
   }
 
+
+  /**
+   * Trova tutte le aste che devono iniziare, sulla base dello stato e dell'orario di inizio.
+   * 
+   * @param status Array di stati accettati (es. ['created', 'open']).
+   * @param startTime Data limite: prende le aste il cui startTime è inferiore o uguale.
+   * @returns Array di aste da avviare, ordinate per data di creazione decrescente.
+   */
   async findAllStartTime(status: string[], startTime: Date): Promise<Auction[]> {
     return Auction.findAll(
       { where: {
@@ -111,6 +119,14 @@ export class AuctionDAO {
       }, order: [['createdAt', 'DESC']] });
   }
 
+
+  /**
+   * Trova tutte le aste che devono essere chiuse, sulla base dello stato e dell'orario di fine.
+   * 
+   * @param status Array di stati accettati (es. ['bidding']).
+   * @param endTime Data limite: prende le aste il cui endTime è inferiore o uguale.
+   * @returns Array di aste da chiudere, ordinate per data di creazione decrescente.
+   */
   async findAllEndTime(status: string[], endTime: Date): Promise<Auction[]> {
     return Auction.findAll(
       { where: {

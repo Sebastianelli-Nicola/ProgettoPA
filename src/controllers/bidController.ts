@@ -42,14 +42,6 @@ export const placeBid = async (req: AuthRequest, res: Response, next: NextFuncti
     // Registra l'offerta tramite il servizio
     const result = await bidService.placeBid(auctionId, userId);
 
-    // // Se l'asta è stata estesa, notifica i partecipanti
-    // if (result.extended) {
-    //   broadcastToAuction(auctionId, {
-    //     type: 'extended',
-    //     newEndTime: result.newEndTime,
-    //   });
-    // }
-
     // Notifica la nuova offerta a tutti i partecipanti
     broadcastToAuction(auctionId, {
       type: 'new_bid',

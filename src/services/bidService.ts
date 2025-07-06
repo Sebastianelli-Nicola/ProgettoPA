@@ -66,13 +66,8 @@ export class BidService {
 
         const lastBid = await this.bidDAO.findLastBid(auctionId, transaction);   // Trova l'ultima offerta per l'asta
         const lastAmount = lastBid ? Number(lastBid.amount) : 0;   // Ottiene l'importo dell'ultima offerta
-        //const minValid = lastAmount + Number(auction.bidIncrement);   // Calcola l'importo minimo valido
-
-        // Controlla se l'offerta è valida
-        // if (amount < minValid) throw ErrorFactory.createError(ErrorType.Validation, `L'offerta deve essere almeno di ${minValid}`);
 
         const newAmount = lastAmount + Number(auction.bidIncrement);
-
 
         if (newAmount > Number(auction.maxPrice)) {
           throw ErrorFactory.createError(ErrorType.Validation, `Il prezzo finale non può superare ${auction.maxPrice} €`);
@@ -93,22 +88,6 @@ export class BidService {
           createdAt: nowDate,
           updatedAt: nowDate
         }, transaction);
-
-        // // Gestione estensione asta
-        // const now = Date.now();
-        // const endTime = new Date(auction.endTime).getTime();
-        // const timeLeft = endTime - now;
-        // let extended = false;
-        // let newEndTime: Date | null = null;
-
-        // if (timeLeft <= auction.relaunchTime * 1000) {
-        //     auction.endTime = new Date(now + auction.relaunchTime * 1000);
-        //     await auction.save({ transaction });
-        //     extended = true;
-        //     newEndTime = auction.endTime;
-        // }
-
-        // return { bid, extended, newEndTime };
 
         return { bid};
         });

@@ -19,6 +19,7 @@ export enum ErrorType {
   InvalidFromDate, 
   InvalidToDate, 
   InvalidRole,
+  InvalidAuctionStatus,
   AuctionNotOpen,              
   MaxParticipantsReached,      
   AlreadyJoined,   
@@ -145,6 +146,12 @@ class InvalidToDateError extends ApplicationError {
 class InvalidRoleError extends ApplicationError {
   constructor(message = 'Il ruolo può essere solo: admin, bid-creator o bid-participant') {
     super('InvalidRoleError', message, StatusCodes.BAD_REQUEST);
+  }
+}
+
+class InvalidAuctionStatusError extends ApplicationError {
+  constructor(message = 'L\'asta non è nello stato correto') {
+    super('InvalidAuctionStatusError', message, StatusCodes.BAD_REQUEST);
   }
 }
 
@@ -296,6 +303,8 @@ export class ErrorFactory {
         return new InvalidToDateError(message);
       case ErrorType.InvalidRole:
         return new InvalidRoleError(message);
+      case ErrorType.InvalidAuctionStatus:
+        return new InvalidAuctionStatusError(message);
       case ErrorType.AuctionNotOpen:
         return new AuctionNotOpenError(message);
       case ErrorType.MaxParticipantsReached:

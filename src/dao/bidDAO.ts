@@ -89,7 +89,7 @@ export class BidDAO {
   }
 
 
-    /**
+  /**
    * Restituisce tutte le offerte per una specifica asta.
    * @param auctionId ID dell'asta.
    * @returns Array di offerte ordinate per data di creazione crescente.

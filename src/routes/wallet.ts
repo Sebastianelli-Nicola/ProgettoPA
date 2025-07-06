@@ -1,6 +1,5 @@
 import express from 'express';
 import { getWalletBalance, rechargeWallet } from '../controllers/walletController';
-//import { authenticateJWT, authorizeRoles } from '../middlewares/authMiddleware';
 import { authMiddlewareHandler } from '../middlewares/auth/authMiddlewareHandler'; 
 
 const router = express.Router();

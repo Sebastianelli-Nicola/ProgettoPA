@@ -119,7 +119,7 @@ export class StatsDAO {
       let userBidTotal = 0;
       if (participation) {
         userBidTotal = await bidDAO.countByAuction(auction.id)
-          .then(count => count * Number(auction.bidIncrement)); // o calcola la somma reale se hai `Bid.amount`
+          .then(count => count * Number(auction.bidIncrement)); 
       }
 
       const totalCost = Number(participation?.fee || 0) + userBidTotal;
@@ -138,35 +138,6 @@ export class StatsDAO {
     return { won, lost };
   }
 
-  // async getAuctionHistory(userId: number, from?: Date, to?: Date) {
-  //   const participationDAO = ParticipationDAO.getInstance();
-
-  //   // Recupera tutte le partecipazioni dell'utente nel periodo
-  //   const participations = await participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
-
-  //   // Estrae tutti gli ID delle aste a cui ha partecipato
-  //   const auctionIds = participations.map(p => p.auctionId);
-
-  //   // Recupera tutte le aste chiuse tra quelle partecipate
-  //   const auctionDAO = AuctionDAO.getInstance();
-  //   const auctions = await auctionDAO.findAllClosed(auctionIds);
-
-  //   // Mappa per associare una partecipazione a un'asta
-  //   const participationMap = new Map<number, any>();
-  //   participations.forEach(p => participationMap.set(p.auctionId, p));
-
-  //   // Arricchisce ogni asta con info se è stata aggiudicata dall'utente
-  //   const history = auctions.map(a => ({
-  //     ...a.toJSON(),
-  //     isWinner: participationMap.get(a.id)?.isWinner || false
-  //   }));
-
-  //   // Divide tra aste aggiudicate e non aggiudicate
-  //   const won = history.filter(a => a.isWinner);
-  //   const lost = history.filter(a => !a.isWinner);
-
-  //   return { won, lost };
-  // }
 
 }
 
