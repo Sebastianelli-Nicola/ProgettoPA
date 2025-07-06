@@ -19,7 +19,7 @@ interface AuctionAttributes {
     maxParticipants: number;
     entryFee: number; //quota di iscrizione
     maxPrice: number; //prezzo massimo dell'asta
-    minIncrement: number; //incremento minimo dell'asta
+    bidIncrement: number; //incremento minimo dell'asta
     bidsPerParticipant: number; //numero di puntate disponibili per partecipante
     status: 'created' | 'open' | 'bidding' | 'closed' | 'cancelled'; //stato dell'asta
     startTime: Date;
@@ -40,7 +40,7 @@ export class Auction extends Model<AuctionAttributes, AuctionCreationAttributes>
     public maxParticipants!: number;
     public entryFee!: number;
     public maxPrice!: number;
-    public minIncrement!: number;
+    public bidIncrement!: number;
     public bidsPerParticipant!: number;
     public status!: 'created' | 'open' | 'bidding' | 'closed' | 'cancelled'; // stato dell'asta
     public startTime!: Date;
@@ -65,7 +65,7 @@ Auction.init({
   maxParticipants: { type: DataTypes.INTEGER, allowNull: false },
   entryFee: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   maxPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-  minIncrement: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  bidIncrement: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   bidsPerParticipant: { type: DataTypes.INTEGER, allowNull: false },
   status: { type: DataTypes.ENUM('created', 'open', 'bidding', 'closed'), defaultValue: 'created' },
   startTime: { type: DataTypes.DATE, allowNull: false },

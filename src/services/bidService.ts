@@ -8,6 +8,7 @@
 import { Auction } from '../models/Auction';
 import { Sequelize } from 'sequelize';
 import { BidDAO } from '../dao/bidDAO';
+import { AuctionDAO } from '../dao/auctionDAO';
 import { ParticipationDAO } from '../dao/participationDAO';
 import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 
@@ -17,6 +18,7 @@ import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 export class BidService {
   private bidDAO = BidDAO.getInstance();
   private participationDAO = ParticipationDAO.getInstance();
+  private auctionDAO = AuctionDAO.getInstance();
 
   /**
    * Ottiene l'istanza di Sequelize associata al modello Auction.
@@ -40,11 +42,11 @@ export class BidService {
    *
    * @throws Errore se l'asta non esiste, se l'utente non ha partecipato all'asta o se l'offerta non è valida.
    */
-  async placeBid(auctionId: number, userId: number, amount: number) {
+  async placeBid(auctionId: number, userId: number) {
     const sequelize = this.getSequelize();    // Ottiene l'istanza di Sequelize
     return sequelize.transaction(async (transaction) => {
 
-        const auction = await Auction.findByPk(auctionId, { transaction });   // Trova l'asta per ID
+        const auction = await this.auctionDAO.findById(auctionId, transaction);   // Trova l'asta per ID
 
         // Controlla se l'asta esiste
         if (!auction) throw ErrorFactory.createError(ErrorType.AuctionNotFound);
@@ -64,34 +66,51 @@ export class BidService {
 
         const lastBid = await this.bidDAO.findLastBid(auctionId, transaction);   // Trova l'ultima offerta per l'asta
         const lastAmount = lastBid ? Number(lastBid.amount) : 0;   // Ottiene l'importo dell'ultima offerta
-        const minValid = lastAmount + Number(auction.minIncrement);   // Calcola l'importo minimo valido
+        //const minValid = lastAmount + Number(auction.bidIncrement);   // Calcola l'importo minimo valido
 
         // Controlla se l'offerta è valida
-        if (amount < minValid) throw ErrorFactory.createError(ErrorType.Validation, `L'offerta deve essere almeno di ${minValid}`);
+        // if (amount < minValid) throw ErrorFactory.createError(ErrorType.Validation, `L'offerta deve essere almeno di ${minValid}`);
+
+        const newAmount = lastAmount + Number(auction.bidIncrement);
+
+
+        if (newAmount > Number(auction.maxPrice)) {
+          throw ErrorFactory.createError(ErrorType.Validation, `Il prezzo finale non può superare ${auction.maxPrice} €`);
+        }
+
 
         // Controlla se l'offerta supera il prezzo massimo
-        if (amount > Number(auction.maxPrice)) throw ErrorFactory.createError(ErrorType.Validation, `L'offerta non può superare il prezzo massimo di ${auction.maxPrice}`);
+        if (newAmount > Number(auction.maxPrice)) throw ErrorFactory.createError(ErrorType.Validation, `L'offerta non può superare il prezzo massimo di ${auction.maxPrice}`);
 
         const nowDate = new Date();   // Ottiene la data e ora attuale
 
+
         // Crea una nuova offerta
-        const bid = await this.bidDAO.createBid({ auctionId, userId, amount, updatedAt: nowDate }, transaction);
+        const bid = await this.bidDAO.createBid({
+          auctionId,
+          userId,
+          amount: newAmount,     
+          createdAt: nowDate,
+          updatedAt: nowDate
+        }, transaction);
 
-        // Gestione estensione asta
-        const now = Date.now();
-        const endTime = new Date(auction.endTime).getTime();
-        const timeLeft = endTime - now;
-        let extended = false;
-        let newEndTime: Date | null = null;
+        // // Gestione estensione asta
+        // const now = Date.now();
+        // const endTime = new Date(auction.endTime).getTime();
+        // const timeLeft = endTime - now;
+        // let extended = false;
+        // let newEndTime: Date | null = null;
 
-        if (timeLeft <= auction.relaunchTime * 1000) {
-            auction.endTime = new Date(now + auction.relaunchTime * 1000);
-            await auction.save({ transaction });
-            extended = true;
-            newEndTime = auction.endTime;
-        }
+        // if (timeLeft <= auction.relaunchTime * 1000) {
+        //     auction.endTime = new Date(now + auction.relaunchTime * 1000);
+        //     await auction.save({ transaction });
+        //     extended = true;
+        //     newEndTime = auction.endTime;
+        // }
 
-        return { bid, extended, newEndTime };
+        // return { bid, extended, newEndTime };
+
+        return { bid};
         });
     }
 

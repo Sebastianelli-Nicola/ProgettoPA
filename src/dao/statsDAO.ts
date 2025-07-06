@@ -118,8 +118,8 @@ export class StatsDAO {
       
       let userBidTotal = 0;
       if (participation) {
-        userBidTotal = await bidDAO.countByAuctionAndUser(auction.id, userId)
-          .then(count => count * Number(auction.minIncrement)); // o calcola la somma reale se hai `Bid.amount`
+        userBidTotal = await bidDAO.countByAuction(auction.id)
+          .then(count => count * Number(auction.bidIncrement)); // o calcola la somma reale se hai `Bid.amount`
       }
 
       const totalCost = Number(participation?.fee || 0) + userBidTotal;

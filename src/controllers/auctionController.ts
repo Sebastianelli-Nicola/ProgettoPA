@@ -27,7 +27,7 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
       maxParticipants,
       entryFee,
       maxPrice,
-      minIncrement,
+      bidIncrement,
       bidsPerParticipant,
       startTime,
       //endTime,
@@ -51,7 +51,7 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
     // Verifica la presenza di tutti i dati obbligatori (accetta anche 0 come valore valido)
     if (
       title == null || minParticipants == null || maxParticipants == null ||
-      entryFee == null || maxPrice == null || minIncrement == null ||
+      entryFee == null || maxPrice == null || bidIncrement == null ||
       bidsPerParticipant == null || startTime == null || /*endTime == null ||*/ relaunchTime == null
     ) {
       return next(ErrorFactory.createError(ErrorType.MissingData));
@@ -65,7 +65,7 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
       maxParticipants,
       entryFee,
       maxPrice,
-      minIncrement,
+      bidIncrement,
       bidsPerParticipant,
       startTime,
       //endTime,

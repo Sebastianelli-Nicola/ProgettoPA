@@ -27,7 +27,7 @@ export const placeBid = async (req: AuthRequest, res: Response, next: NextFuncti
   try {
     const auctionId = parseInt(req.body.auctionId);
     const userId = req.user?.id;
-    const { amount } = req.body;
+    //const { amount } = req.body;
 
     // Verifica che l'utente sia autenticato
     if (!userId) {
@@ -35,20 +35,20 @@ export const placeBid = async (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     // Verifica che l'importo sia valido
-    if (!amount || isNaN(amount)) {
-      return next(ErrorFactory.createError(ErrorType.Validation, 'Importo offerta non valido'));
-    }
+    // if (!amount || isNaN(amount)) {
+    //   return next(ErrorFactory.createError(ErrorType.Validation, 'Importo offerta non valido'));
+    // }
 
     // Registra l'offerta tramite il servizio
-    const result = await bidService.placeBid(auctionId, userId, Number(amount));
+    const result = await bidService.placeBid(auctionId, userId);
 
-    // Se l'asta è stata estesa, notifica i partecipanti
-    if (result.extended) {
-      broadcastToAuction(auctionId, {
-        type: 'extended',
-        newEndTime: result.newEndTime,
-      });
-    }
+    // // Se l'asta è stata estesa, notifica i partecipanti
+    // if (result.extended) {
+    //   broadcastToAuction(auctionId, {
+    //     type: 'extended',
+    //     newEndTime: result.newEndTime,
+    //   });
+    // }
 
     // Notifica la nuova offerta a tutti i partecipanti
     broadcastToAuction(auctionId, {

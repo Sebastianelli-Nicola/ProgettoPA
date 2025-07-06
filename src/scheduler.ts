@@ -14,7 +14,7 @@ cron.schedule('* * * * *', async () => {
 
   try {
     // 1. Aste da avviare (created/open -> bidding)
-    const toOpen = await auctionDao.findAll(['created', 'open'], now);
+    const toOpen = await auctionDao.findAllStartTime(['created', 'open'], now);
 
     if (toOpen.length > 0) {
       console.log(`[${now.toISOString()}] 🟢 Trovate ${toOpen.length} aste da avviare.`);
@@ -35,7 +35,7 @@ cron.schedule('* * * * *', async () => {
     }
 
     // 2. Aste da chiudere (bidding -> closed)
-    const toClose = await auctionDao.findAll(['bidding'], now);
+    const toClose = await auctionDao.findAllEndTime(['bidding'], now);
 
     if (toClose.length > 0) {
       console.log(`[${now.toISOString()}] 🔴 Trovate ${toClose.length} aste da chiudere.`);

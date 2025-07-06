@@ -37,7 +37,7 @@ export = {
       maxParticipants: { type: DataTypes.INTEGER, allowNull: false },
       entryFee: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       maxPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-      minIncrement: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+      bidIncrement: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       bidsPerParticipant: { type: DataTypes.INTEGER, allowNull: false },
       status: {
         type: DataTypes.ENUM('created', 'open', 'bidding', 'closed', 'cancelled'),

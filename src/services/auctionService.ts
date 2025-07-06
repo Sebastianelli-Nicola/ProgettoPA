@@ -80,7 +80,7 @@ export class AuctionService {
         { key: 'minParticipants', value: data.minParticipants },
         { key: 'maxParticipants', value: data.maxParticipants },
         { key: 'maxPrice', value: data.maxPrice },
-        { key: 'minIncrement', value: data.minIncrement },
+        { key: 'minIncrement', value: data.bidIncrement },
         { key: 'bidsPerParticipant', value: data.bidsPerParticipant },
         { key: 'relaunchTime', value: data.relaunchTime}
       ];
@@ -95,10 +95,10 @@ export class AuctionService {
       }
 
       // maxPrice deve essere maggiore di minIncrement
-      if (data.maxPrice <= data.minIncrement) {
+      if (data.maxPrice <= data.bidIncrement) {
         throw ErrorFactory.createError(
           ErrorType.Validation,
-          'Il campo "maxPrice" deve essere maggiore di "minIncrement".'
+          'Il campo "maxPrice" deve essere maggiore di "bidIncrement".'
         );
       }
 
@@ -215,72 +215,175 @@ export class AuctionService {
    * @returns Un oggetto contenente l'ID del vincitore e l'importo finale dell'offerta.
    */
   async closeAuction(auctionId: number) {
-    const sequelize = this.getSequelize();  // Ottiene l'istanza di Sequelize
+    const sequelize = this.getSequelize();
     return sequelize.transaction(async (transaction) => {
-      const auction = await this.auctionDAO.findById(auctionId, transaction); // Trova l'asta per ID
 
-      // Controlla se l'asta esiste
-      if (!auction) throw { status: 404, message: 'Asta non trovata' }; 
-      
-      // Controlla se l'asta è nello stato "bidding"
+      // 1. Recupera l'asta
+      const auction = await this.auctionDAO.findById(auctionId, transaction);
+      if (!auction) throw { status: 404, message: 'Asta non trovata' };
       if (auction.status !== 'bidding') throw { status: 400, message: 'L\'asta non è nello stato "bidding"' };
 
-      const topBid = await this.bidDAO.findTopBidByAuction(auctionId, transaction); // Trova la puntata più alta per l'asta
-      
-      // Controlla se esiste una puntata valida
-      if (!topBid) throw { status: 400, message: 'Nessuna offerta valida trovata' };
+      // 2. Recupera tutte le puntate ordinate per data (serve per risolvere parità)
+      const bids = await this.bidDAO.findBidsByAuctionId(auctionId, transaction);
+      if (!bids || bids.length === 0) throw { status: 400, message: 'Nessuna offerta trovata' };
 
-      const finalAmount = Number(topBid.amount); // Importo finale dell'offerta vincente
-      const maxPrice = Number(auction.maxPrice); // Prezzo massimo dell'asta
-
-      // Trova il wallet del vincitore
-      const winnerWallet = await this.walletDAO.findByUserId(topBid.userId, transaction);
-
-      // Se il wallet del vincitore esiste, rimborsa la differenza tra il prezzo massimo e l'importo finale
-      if (winnerWallet) {
-        const refund = maxPrice - finalAmount;
-        winnerWallet.balance += refund;
-        await this.walletDAO.save(winnerWallet, transaction); // Salva il wallet del vincitore con il rimborso
+      // 3. Conta quante puntate ha fatto ciascun utente
+      const bidCountByUser: Record<number, number> = {};
+      for (const bid of bids) {
+        bidCountByUser[bid.userId] = (bidCountByUser[bid.userId] || 0) + 1;
       }
 
-      // Trova la partecipazione del vincitore e segna come vincitore
-      const winnerParticipation = await this.participationDAO.findParticipation(topBid.userId, auctionId, transaction);
-      
-      // Se la partecipazione del vincitore esiste, aggiorna il campo isWinner
-      // e salva la partecipazione aggiornata
+      // 4. Trova il numero massimo di puntate fatte da un singolo utente
+      let maxBidCount = 0;
+      for (const count of Object.values(bidCountByUser)) {
+        if (count > maxBidCount) maxBidCount = count;
+      }
+
+      // 5. Trova tutti gli utenti che hanno fatto il numero massimo di puntate
+      const candidates = Object.entries(bidCountByUser)
+        .filter(([_, count]) => count === maxBidCount)
+        .map(([userId]) => Number(userId));
+
+      // 6. Se c'è più di un candidato, vince chi ha puntato per ultimo tra loro
+      let winnerId: number | undefined;
+
+      for (let i = bids.length - 1; i >= 0; i--) {
+        if (candidates.includes(bids[i].userId)) {
+          winnerId = bids[i].userId;
+          break;
+        }
+      }
+
+      if (winnerId === undefined) {
+        throw { status: 500, message: 'Errore nel determinare il vincitore' };
+      }
+
+      // 7. Calcola il prezzo finale dell’oggetto (totale puntate * incremento per puntata)
+      const totalBids = bids.length;
+      const increment = Number(auction.bidIncrement);
+      const finalAmount = totalBids * increment;
+      const maxPrice = Number(auction.maxPrice); // prezzo prelevato all'inizio
+
+      // 8. Rimborsa la differenza al vincitore (ha già pagato maxPrice)
+      const winnerWallet = await this.walletDAO.findByUserId(winnerId, transaction);
+      if (winnerWallet) {
+        const refund =
+                parseFloat(Number(maxPrice).toFixed(2)) -
+                parseFloat(Number(finalAmount).toFixed(2));
+        
+        if (refund > 0) {
+          winnerWallet.balance = parseFloat(Number(winnerWallet.balance).toFixed(2));
+
+
+          winnerWallet.balance += refund;
+          await this.walletDAO.save(winnerWallet, transaction);
+        }
+      }
+
+      // 9. Marca la partecipazione del vincitore
+      const winnerParticipation = await this.participationDAO.findParticipation(winnerId, auctionId, transaction);
       if (winnerParticipation) {
         winnerParticipation.isWinner = true;
         await this.participationDAO.saveParticipation(winnerParticipation, transaction);
       }
 
-      // Trova tutti i partecipanti validi all'asta
+      // 10. Rimborsa il maxPrice a tutti gli altri partecipanti (escluso il vincitore)
       const participants = await this.participationDAO.findValidParticipants(auctionId, transaction);
-      
-      // Rimborsa tutti i partecipanti che non sono il vincitore
-      // Aggiunge il prezzo massimo all'importo del wallet di ogni partecipante non vincitore
-      // e salva il wallet aggiornato
       for (const participant of participants) {
-        if (participant.userId !== topBid.userId) {
+        if (participant.userId !== winnerId) {
           const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
           if (wallet) {
-            wallet.balance += +maxPrice;
+             wallet.balance = parseFloat(Number(wallet.balance).toFixed(2));
+
+              const totalRefund =
+                parseFloat(Number(maxPrice).toFixed(2)) +
+                parseFloat(Number(auction.entryFee).toFixed(2));
+
+              wallet.balance += totalRefund;
             await this.walletDAO.save(wallet, transaction);
           }
         }
       }
 
-      // Aggiorna lo stato dell'asta a "closed"
+      // 11. Chiude l’asta
       auction.status = 'closed';
-      await this.auctionDAO.save(auction, transaction);   // Salva l'asta aggiornata
+      await this.auctionDAO.save(auction, transaction);
 
-      // Restituisce l'ID del vincitore e l'importo finale dell'offerta
-      // Questo oggetto sarà utilizzato per notificare il vincitore e l'importo finale
+      // 12. Restituisce i dati rilevanti (per notifiche, log, ecc.)
       return {
-        winnerId: topBid.userId,
-        finalAmount: topBid.amount,
+        winnerId,
+        finalAmount,
       };
     });
   }
+
+  // async closeAuction(auctionId: number) {
+  //   const sequelize = this.getSequelize();  // Ottiene l'istanza di Sequelize
+  //   return sequelize.transaction(async (transaction) => {
+  //     const auction = await this.auctionDAO.findById(auctionId, transaction); // Trova l'asta per ID
+
+  //     // Controlla se l'asta esiste
+  //     if (!auction) throw { status: 404, message: 'Asta non trovata' }; 
+      
+  //     // Controlla se l'asta è nello stato "bidding"
+  //     if (auction.status !== 'bidding') throw { status: 400, message: 'L\'asta non è nello stato "bidding"' };
+
+  //     const topBid = await this.bidDAO.findTopBidByAuction(auctionId, transaction); // Trova la puntata più alta per l'asta
+      
+  //     // Controlla se esiste una puntata valida
+  //     if (!topBid) throw { status: 400, message: 'Nessuna offerta valida trovata' };
+
+  //     const finalAmount = Number(topBid.amount); // Importo finale dell'offerta vincente
+  //     const maxPrice = Number(auction.maxPrice); // Prezzo massimo dell'asta
+
+  //     // Trova il wallet del vincitore
+  //     const winnerWallet = await this.walletDAO.findByUserId(topBid.userId, transaction);
+
+  //     // Se il wallet del vincitore esiste, rimborsa la differenza tra il prezzo massimo e l'importo finale
+  //     if (winnerWallet) {
+  //       const refund = maxPrice - finalAmount;
+  //       winnerWallet.balance += refund;
+  //       await this.walletDAO.save(winnerWallet, transaction); // Salva il wallet del vincitore con il rimborso
+  //     }
+
+  //     // Trova la partecipazione del vincitore e segna come vincitore
+  //     const winnerParticipation = await this.participationDAO.findParticipation(topBid.userId, auctionId, transaction);
+      
+  //     // Se la partecipazione del vincitore esiste, aggiorna il campo isWinner
+  //     // e salva la partecipazione aggiornata
+  //     if (winnerParticipation) {
+  //       winnerParticipation.isWinner = true;
+  //       await this.participationDAO.saveParticipation(winnerParticipation, transaction);
+  //     }
+
+  //     // Trova tutti i partecipanti validi all'asta
+  //     const participants = await this.participationDAO.findValidParticipants(auctionId, transaction);
+      
+  //     // Rimborsa tutti i partecipanti che non sono il vincitore
+  //     // Aggiunge il prezzo massimo all'importo del wallet di ogni partecipante non vincitore
+  //     // e salva il wallet aggiornato
+  //     for (const participant of participants) {
+  //       if (participant.userId !== topBid.userId) {
+  //         const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
+  //         if (wallet) {
+  //           wallet.balance += +maxPrice;
+  //           await this.walletDAO.save(wallet, transaction);
+  //         }
+  //       }
+  //     }
+
+  //     // Aggiorna lo stato dell'asta a "closed"
+  //     auction.status = 'closed';
+  //     await this.auctionDAO.save(auction, transaction);   // Salva l'asta aggiornata
+
+  //     // Restituisce l'ID del vincitore e l'importo finale dell'offerta
+  //     // Questo oggetto sarà utilizzato per notificare il vincitore e l'importo finale
+  //     return {
+  //       winnerId: topBid.userId,
+  //       finalAmount: topBid.amount,
+  //     };
+  //   });
+  // }
 
 
   /**
@@ -344,7 +447,13 @@ export class AuctionService {
         for (const participant of participants) {
             const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
             if (wallet) {
-              wallet.balance += +maxPrice + +auction.entryFee;
+              wallet.balance = parseFloat(Number(wallet.balance).toFixed(2));
+
+              const totalRefund =
+                parseFloat(Number(maxPrice).toFixed(2)) +
+                parseFloat(Number(auction.entryFee).toFixed(2));
+                
+              wallet.balance += totalRefund;
               await this.walletDAO.save(wallet, transaction);
             }
         }
@@ -391,7 +500,13 @@ export class AuctionService {
         for (const participant of participants) {
             const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
             if (wallet) {
-              wallet.balance += +maxPrice + +auction.entryFee;
+              wallet.balance = parseFloat(Number(wallet.balance).toFixed(2));
+
+              const totalRefund =
+                parseFloat(Number(maxPrice).toFixed(2)) +
+                parseFloat(Number(auction.entryFee).toFixed(2));
+
+              wallet.balance += totalRefund;
               await this.walletDAO.save(wallet, transaction);
             }
         }
@@ -420,14 +535,16 @@ export class AuctionService {
 
   }
 
+
   async finalizeAuction(auctionId: number) {
     const sequelize = this.getSequelize();
     return sequelize.transaction(async (transaction) => {
-      // Trova l'asta con tutte le puntate
+
+      // 1. Recupera l'asta
       const auction = await this.auctionDAO.findById(auctionId, transaction);
       if (!auction) throw ErrorFactory.createError(ErrorType.AuctionNotFound);
 
-      // Trova tutte le puntate dell'asta
+      // 2. Recupera tutte le puntate ordinate per data (serve per risolvere parità)
       const bids = await this.bidDAO.findBidsByAuctionId(auctionId, transaction);
       if (!bids.length) {
         console.warn(`Nessuna puntata per auctionId ${auctionId}, impossibile determinare vincitore.`);
@@ -436,78 +553,183 @@ export class AuctionService {
         return { winnerId: null, finalAmount: 0 };
       }
 
+      // 3. Conta quante puntate ha fatto ciascun utente
+      const bidCountByUser: Record<number, number> = {};
+      for (const bid of bids) {
+        bidCountByUser[bid.userId] = (bidCountByUser[bid.userId] || 0) + 1;
+      }
 
-      // Raggruppa le puntate per utente
-      const grouped = bids.reduce((acc, b) => {
-        acc[b.userId] = acc[b.userId] || [];
-        acc[b.userId].push(b);
-        return acc;
-      }, {} as Record<number, typeof bids>);
+      // 4. Trova il numero massimo di puntate fatte da un singolo utente
+      let maxBidCount = 0;
+      for (const count of Object.values(bidCountByUser)) {
+        if (count > maxBidCount) maxBidCount = count;
+      }
 
-      // Trova il vincitore: più puntate, in caso di pari merito chi ha puntato per ultimo
-      let winnerId: number | null = null, maxCount = -1, lastTime = new Date(0);
-      for (const [uid, arr] of Object.entries(grouped)) {
-        const cnt = arr.length;
-        const lt = arr.map(b => b.createdAt).sort()[arr.length - 1];
-        if (cnt > maxCount || (cnt === maxCount && lt > lastTime)) {
-          winnerId = Number(uid);
-          maxCount = cnt;
-          lastTime = lt;
+      // 5. Trova tutti gli utenti che hanno fatto il numero massimo di puntate
+      const candidates = Object.entries(bidCountByUser)
+        .filter(([_, count]) => count === maxBidCount)
+        .map(([userId]) => Number(userId));
+
+      // 6. Se c'è più di un candidato, vince chi ha puntato per ultimo tra loro
+      let winnerId: number | undefined;
+      for (let i = bids.length - 1; i >= 0; i--) {
+        if (candidates.includes(bids[i].userId)) {
+          winnerId = bids[i].userId;
+          break;
         }
       }
 
       if (!winnerId) throw ErrorFactory.createError(ErrorType.WinnerNotFound);
 
-      const maxPrice = Number(auction.maxPrice);    // Prezzo massimo dell'asta
+      // 7. Calcola il prezzo finale dell’oggetto (totale puntate * incremento per puntata)
+      const totalBids = bids.length;
+      const increment = Number(auction.bidIncrement);
+      const finalAmount = totalBids * increment;
+      const maxPrice = Number(auction.maxPrice); // importo già pagato da ciascun partecipante
 
-      // Trova la partecipazione del vincitore e segna come vincitore
+      // 8. Segna il vincitore nella partecipazione
       const winnerParticipation = await this.participationDAO.findParticipation(winnerId, auctionId, transaction);
-
-      // Se la partecipazione del vincitore esiste, aggiorna il campo isWinner
-      // e salva la partecipazione aggiornata
       if (winnerParticipation) {
         winnerParticipation.isWinner = true;
         await this.participationDAO.saveParticipation(winnerParticipation, transaction);
-        }
+      }
 
-      // Trova la puntata vincente (topBid)
-      const topBid = bids
-        .filter(b => b.userId === winnerId)
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
-
-      // Aggiorna il wallet del vincitore
+      // 9. Rimborsa l’eventuale differenza al vincitore (ha già pagato maxPrice)
       const winnerWallet = await this.walletDAO.findByUserId(winnerId, transaction);
-        if (winnerWallet && topBid) {
-          winnerWallet.balance -= Number(topBid.amount);
+      if (winnerWallet) {
+        const refund =
+                parseFloat(Number(maxPrice).toFixed(2)) -
+                parseFloat(Number(finalAmount).toFixed(2));
+        
+        if (refund > 0) {
+          winnerWallet.balance = parseFloat(Number(winnerWallet.balance).toFixed(2));
+
+
+          winnerWallet.balance += refund;
           await this.walletDAO.save(winnerWallet, transaction);
         }
+      }
 
-      // Trova tutti i partecipanti validi all'asta
+      // 10. Rimborsa completamente gli altri partecipanti (non vincitori)
       const participants = await this.participationDAO.findValidParticipants(auctionId, transaction);
-        
-      // Rimborsa tutti i partecipanti che non sono il vincitore
-      // Aggiunge il prezzo massimo all'importo del wallet di ogni partecipante non vincitore
-      // e salva il wallet aggiornato
       for (const participant of participants) {
         if (participant.userId !== winnerId) {
           const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
           if (wallet) {
-              wallet.balance += +maxPrice;
-              await this.walletDAO.save(wallet, transaction);
-            }
+             wallet.balance = parseFloat(Number(wallet.balance).toFixed(2));
+
+              const totalRefund =
+                parseFloat(Number(maxPrice).toFixed(2)) +
+                parseFloat(Number(auction.entryFee).toFixed(2));
+
+              wallet.balance += totalRefund;
+            await this.walletDAO.save(wallet, transaction);
           }
         }
+      }
 
-      // Aggiorna lo stato dell'asta a "closed"
+      // 11. Chiudi l’asta
       auction.status = 'closed';
-      await this.auctionDAO.save(auction, transaction);   // Salva l'asta aggiornata
+      await this.auctionDAO.save(auction, transaction);
 
-      // Restituisce l'ID del vincitore e l'importo finale dell'offerta
-      // Questo oggetto sarà utilizzato per notificare il vincitore e l'importo finale
+      // 12. Restituisci dati finali
       return {
-          winnerId: winnerId,
-          finalAmount: topBid.amount,
-        };
-      });
+        winnerId,
+        finalAmount,
+      };
+    });
   }
+
+
+
+  // async finalizeAuction(auctionId: number) {
+  //   const sequelize = this.getSequelize();
+  //   return sequelize.transaction(async (transaction) => {
+  //     // Trova l'asta con tutte le puntate
+  //     const auction = await this.auctionDAO.findById(auctionId, transaction);
+  //     if (!auction) throw ErrorFactory.createError(ErrorType.AuctionNotFound);
+
+  //     // Trova tutte le puntate dell'asta
+  //     const bids = await this.bidDAO.findBidsByAuctionId(auctionId, transaction);
+  //     if (!bids.length) {
+  //       console.warn(`Nessuna puntata per auctionId ${auctionId}, impossibile determinare vincitore.`);
+  //       auction.status = 'closed';
+  //       await this.auctionDAO.save(auction, transaction);
+  //       return { winnerId: null, finalAmount: 0 };
+  //     }
+
+
+  //     // Raggruppa le puntate per utente
+  //     const grouped = bids.reduce((acc, b) => {
+  //       acc[b.userId] = acc[b.userId] || [];
+  //       acc[b.userId].push(b);
+  //       return acc;
+  //     }, {} as Record<number, typeof bids>);
+
+  //     // Trova il vincitore: più puntate, in caso di pari merito chi ha puntato per ultimo
+  //     let winnerId: number | null = null, maxCount = -1, lastTime = new Date(0);
+  //     for (const [uid, arr] of Object.entries(grouped)) {
+  //       const cnt = arr.length;
+  //       const lt = arr.map(b => b.createdAt).sort()[arr.length - 1];
+  //       if (cnt > maxCount || (cnt === maxCount && lt > lastTime)) {
+  //         winnerId = Number(uid);
+  //         maxCount = cnt;
+  //         lastTime = lt;
+  //       }
+  //     }
+
+  //     if (!winnerId) throw ErrorFactory.createError(ErrorType.WinnerNotFound);
+
+  //     const maxPrice = Number(auction.maxPrice);    // Prezzo massimo dell'asta
+
+  //     // Trova la partecipazione del vincitore e segna come vincitore
+  //     const winnerParticipation = await this.participationDAO.findParticipation(winnerId, auctionId, transaction);
+
+  //     // Se la partecipazione del vincitore esiste, aggiorna il campo isWinner
+  //     // e salva la partecipazione aggiornata
+  //     if (winnerParticipation) {
+  //       winnerParticipation.isWinner = true;
+  //       await this.participationDAO.saveParticipation(winnerParticipation, transaction);
+  //       }
+
+  //     // Trova la puntata vincente (topBid)
+  //     const topBid = bids
+  //       .filter(b => b.userId === winnerId)
+  //       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+  //     // Aggiorna il wallet del vincitore
+  //     const winnerWallet = await this.walletDAO.findByUserId(winnerId, transaction);
+  //       if (winnerWallet && topBid) {
+  //         winnerWallet.balance -= Number(topBid.amount);
+  //         await this.walletDAO.save(winnerWallet, transaction);
+  //       }
+
+  //     // Trova tutti i partecipanti validi all'asta
+  //     const participants = await this.participationDAO.findValidParticipants(auctionId, transaction);
+        
+  //     // Rimborsa tutti i partecipanti che non sono il vincitore
+  //     // Aggiunge il prezzo massimo all'importo del wallet di ogni partecipante non vincitore
+  //     // e salva il wallet aggiornato
+  //     for (const participant of participants) {
+  //       if (participant.userId !== winnerId) {
+  //         const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
+  //         if (wallet) {
+  //             wallet.balance += +maxPrice;
+  //             await this.walletDAO.save(wallet, transaction);
+  //           }
+  //         }
+  //       }
+
+  //     // Aggiorna lo stato dell'asta a "closed"
+  //     auction.status = 'closed';
+  //     await this.auctionDAO.save(auction, transaction);   // Salva l'asta aggiornata
+
+  //     // Restituisce l'ID del vincitore e l'importo finale dell'offerta
+  //     // Questo oggetto sarà utilizzato per notificare il vincitore e l'importo finale
+  //     return {
+  //         winnerId: winnerId,
+  //         finalAmount: topBid.amount,
+  //       };
+  //     });
+  // }
 }

@@ -32,14 +32,14 @@ export class BidDAO {
   }
 
   /**
-   * Conta quante offerte ha fatto un utente in una specifica asta.
+   * Conta quante offerte in una specifica asta.
    * 
    * @param auctionId ID dell'asta.
    * @param transaction (Opzionale) Transazione Sequelize.
    * @returns Numero di offerte fatte nell'asta.
    */
-  async countByAuction(auctionId: number) {
-    return Bid.count({ where: { auctionId }});
+  async countByAuction(auctionId: number, transaction?: Transaction) {
+    return Bid.count({ where: { auctionId}, transaction });
   }
 
   /**
@@ -53,6 +53,7 @@ export class BidDAO {
   async countByAuctionAndUser(auctionId: number, userId: number, transaction?: Transaction) {
     return Bid.count({ where: { auctionId, userId }, transaction });
   }
+
 
 
   /**
