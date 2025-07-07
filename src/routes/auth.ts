@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import { register, login } from '../controllers/authController';
+import { registration, login } from '../controllers/authController';
 
 const router = Router();
 
@@ -17,7 +17,7 @@ router.post('/login', login);
  * Rotta POST per la registrazione
  * Permette agli utenti di registrarsi e ottenere un token JWT
  */
-router.post('/register', register);
+router.post('/registration', registration);
 
 
 export default router;

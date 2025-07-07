@@ -19,6 +19,6 @@ router.get('/', authMiddlewareHandler.authWithRoles(['bid-participant']), getWal
  * Il middleware authMiddlewareHandler verifica la presenza di un token JWT valido
  * e authorizeRoles verifica che l'utente abbia il ruolo di admin.
  */
-router.post('/recharge', authMiddlewareHandler.authWithRoles(['admin']), rechargeWallet);
+router.post('/', authMiddlewareHandler.authWithRoles(['admin']), rechargeWallet);
 
 export default router;

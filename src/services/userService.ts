@@ -27,7 +27,7 @@ export class UserService {
    * @param data I dati dell'utente da registrare.
    * @returns Un messaggio di conferma.
    */
-  async register(data: { email: string, password: string, role: AllowedRole, username: string }) {
+  async registration(data: { email: string, password: string, role: AllowedRole, username: string }) {
     
     const { email, password, role, username } = data;  // Destruttura i dati dell'utente
     

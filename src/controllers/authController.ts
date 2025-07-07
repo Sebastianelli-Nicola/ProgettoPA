@@ -17,9 +17,9 @@ const userService = new UserService();
  * Registra un nuovo utente.
  * Riceve i dati dal body della richiesta, li passa al servizio e restituisce il risultato.
  */
-export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const registration = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const result = await userService.register(req.body);
+    const result = await userService.registration(req.body);
     res.status(HTTPStatus.CREATED).json(result);     // Utente creato con successo
   } catch (error: any) {
     next(error);

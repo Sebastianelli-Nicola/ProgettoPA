@@ -37,7 +37,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rotte principali
-app.use("/auth", authRoutes);         // Rotte per l'autenticazione
+app.use("/user", authRoutes);         // Rotte per l'autenticazione
 app.use("/auction", auctionRoutes);   // Rotte per le aste
 app.use('/bid', bidRoutes);       // Rotte per le puntate
 app.use('/wallet', walletRoutes);     // Rotte per i portafogli degli utenti

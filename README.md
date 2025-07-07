@@ -104,24 +104,38 @@ L’applicazione è ora configurata e sarà disponibile su:
 
 ### Architettura Backend
 
-L'architettura del backend si basa su un sistema composto da quattro container Docker principali. Il fulcro dell'applicazione è rappresentato dal container che esegue il framework Express, responsabile della logica di business: gestisce le chiamate API, si occupa dell’autenticazione/autorizzazione e interagisce con il database. Data la sua importanza, questo container è connesso direttamente agli altri tre.
+Il backend è strutturato secondo un’architettura modulare e scalabile, eseguita all'interno di due container Docker principali. Il cuore del sistema è rappresentato dal container Node.js che utilizza **Express**, responsabile della gestione delle API REST, della logica di business, dell'autenticazione/autorizzazione e dell'interazione con il database.
 
-Uno di questi è il container che ospita Redis, utilizzato per la gestione delle code di elaborazione. Per implementare questo meccanismo, è stata impiegata la libreria BullMQ, integrata nell’ambiente Node.js, come già anticipato.
+#### Componenti principali
 
+- **Express Container**  
+  Esegue l'applicazione Node.js con il framework Express. Si occupa di:
+  - Gestione delle rotte e delle richieste HTTP
+  - Logica di business (controller, DAO, service)
+  - Middleware per sicurezza, validazione e autorizzazione
 
-L'architettura del backend si compone di:
+- **PostgreSQL**  
+  Sistema di database relazionale, utilizzato per la persistenza dei dati. L’accesso è gestito tramite **Sequelize ORM**, con un modello dedicato per ciascuna entità.
 
-- **Express Container**: Container con il framework Express, che si occupa di gestire tutta la logica business dell'applicazione, i controller, i DAO e i middleware.
-- **PostgreSQL**: database relazionale, gestito tramite Sequelize con modelli ORM per ogni entità.
-- **WebSocket Server**: per aggiornamenti in tempo reale su offerte e chiusure aste.
+- **WebSocket Server**  
+  Utilizzato per inviare aggiornamenti in tempo reale agli utenti, ad esempio in fase di rilancio o alla chiusura di un’asta.
 
-#### Moduli principali
+#### 🔍 Struttura dei moduli
 
-- **Controller**: gestiscono le richieste HTTP.
-- **DAO**: interagiscono con il database tramite **Sequelize ORM**.
-- **Service (opzionale)**: logica di business (può essere aggiunta per ulteriore separazione).
-- **Middleware**: per autenticazione, autorizzazione e validazione, realizzati con il pattern **Chain of Responsibility**.
-- **Factory Pattern**: per la gestione centralizzata degli errori.
+- **Controller**  
+  Gestiscono le richieste HTTP e delegano le operazioni ai DAO o ai servizi.
+
+- **DAO (Data Access Object)**  
+  Responsabili dell’interazione con il database tramite Sequelize. L'accesso è organizzato secondo il **pattern Singleton** per ottimizzare le risorse.
+
+- **Service**  
+  Contengono logica di business riutilizzabile, per mantenere i controller snelli e separare le responsabilità.
+
+- **Middleware**  
+  Impiegati per l’autenticazione, l’autorizzazione e la validazione delle richieste. Realizzati secondo il **pattern Chain of Responsibility**, per una gestione modulare e componibile.
+
+- **Factory**  
+  Utilizzato per la gestione centralizzata degli errori, migliorando la manutenibilità e la chiarezza del flusso applicativo.
 
 ---
 
@@ -141,14 +155,53 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
 
 ![Alt text](documentazione/diagramma_casi_uso.png)
 
----
 
-### Rotte Principali
 
-#### `/auction`
+## Rotte Principali
 
-- `POST /` → crea una nuova asta (bid-creator)
-    - **Corpo della richiesta**:
+### User
+
+#### POST `/user/registration` → registra un nuovo utente
+
+  - **Corpo della richiesta**:
+
+    | Key        | Value                         |
+    |------------|-------------------------------|
+    | `email`    | Email dell'utente              |
+    | `password` | Password (non hashed nel body)|
+    | `role`     | Ruolo dell'utente             |
+    | `username` | Nome utente                   |
+
+  - **Esempio di risposta**:
+    ```json
+    {
+      "email": <String>,
+      "password": <String>,
+      "role": <String>,
+      "username": <String>
+    }
+#### POST `/user/login` → registra un nuovo utente
+
+  - **Corpo della richiesta**:
+
+    | Key        | Value                         |
+    |------------|-------------------------------|
+    | `email`    | Email dell'utente              |
+    | `password` | Password (non hashed nel body)|
+
+  - **Esempio di risposta**:
+    - **Esempio di risposta**:
+    ```json
+    {
+        "token": <created_auth_token>
+    }
+    ```
+
+### Aste
+
+#### POST `/auction` → crea una nuova asta (bid-creator)
+    
+  - **Corpo della richiesta**:
 
     | Key                    | Value                                  |
     |------------------------|----------------------------------------|
@@ -185,8 +238,9 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
         }
     }
     ```
-- `GET /` → elenca tutte le aste
-    - **Esempio di risposta**:
+#### GET `/auction` → elenca tutte le aste
+
+  - **Esempio di risposta**:
     ```json
     [
         {
@@ -223,56 +277,140 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
         },
     ]
     ```
-- `POST /join` → iscriviti a un’asta (bid-participant)
-     - **Corpo della richiesta**:
+#### POST`/join` → iscriviti a un’asta (bid-participant)
+  - **Corpo della richiesta**:
 
-        | Key                 | Value                     |
-        |---------------------|---------------------------|
-        | `auctionId`         | Id dell'asta              |
+     | Key                 | Value                     |
+      |---------------------|---------------------------|
+      | `auctionId`         | Id dell'asta              |
 
-    - **Esempio di risposta**:
-        ```json
-        {
+  - **Esempio di risposta**:
+     ```json
+      {
         "message": "Partecipazione registrata con successo"
-        }
-        ```
-- `POST /close` → chiude l’asta (bid-creator)
-     - **Corpo della richiesta**:
+      }
+      ```
 
-        | Key                 | Value                     |
-        |---------------------|---------------------------|
-        | `auctionId`         | Id dell'asta              |
+#### POST `/auction/start` → avvia asta (admin, bid-creator), solo se non funziona lo scheduler
+   - **Corpo della richiesta**:
 
-    - **Esempio di risposta**:
-        ```json
-        {
-        "message": "L'asta non è nello stato \"bidding\""
-        }  
-        ```
-- `POST /start` → avvia asta (admin, bid-creator)
-     - **Corpo della richiesta**:
+      | Key                 | Value                     |
+      |---------------------|---------------------------|
+      | `auctionId`         | Id dell'asta              |
 
-        | Key                 | Value                     |
-        |---------------------|---------------------------|
-        | `auctionId`         | Id dell'asta              |
+  - **Esempio di risposta**:
+    ```json
+    {
+      "message": "Asta avviata"
+    }
+    ```
 
-    - **Esempio di risposta**:
-        ```json
-        {
-        "message": "Asta avviata"
-        }
-        ```
-- `GET /history` → storico aste chiuse (bid-participant)
-     - **Parametri della richiesta**:
+#### POST `/auction/close` → chiude l’asta (bid-creator), solo se non funziona lo scheduler
+  - **Corpo della richiesta**:
 
-        | Key              | Value                                               |
-        |------------------|-----------------------------------------------------|
-        | `from`           | Data inizio filtro                                  |
-        | `to`             | Data fine filtro                                    |
-        | `form`           | Formato in cui ottenere i dati                      |
+    | Key                 | Value                     |
+    |---------------------|---------------------------|
+    | `auctionId`         | Id dell'asta              |
 
-    - **Esempio di risposta**:
-        ```json
+  - **Esempio di risposta**:
+    ```json
+    {
+      "message": "L'asta non è nello stato \"bidding\""
+    }  
+    ```
+
+### Wallet
+
+#### GET `/wallet` → saldo wallet
+  - **Esempio di risposta**:
+      ```json
+      {
+        "balance": <Decimal>
+      }
+      ```
+#### POST `/wallet` → ricarica wallet (admin)
+  - **Corpo della richiesta**:
+
+      | Key                  | Value                           |
+      |----------------------|---------------------------------|
+      | `userId`             | Id dell'utente                  |
+      | `amount`             | Somma da ricaricare             |
+
+  - **Esempio di risposta**:
+    ```json
+    {
+    "message": "Ricarica completata",
+    "balance": <Decimal>
+    }
+    ```
+
+### Bid
+
+#### POST `/bid` → piazza un’offerta (solo se partecipante iscritto)
+  - **Corpo della richiesta**:
+
+    | Key                 | Value                                |
+    |---------------------|--------------------------------------|
+    | `auctionId`         | Id dell'asta                         |
+
+  - **Esempio di risposta**:
+    ```json
+    {
+    "message": "Offerta registrata con successo",
+    "bid": {
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        "id": <Integer>,
+        "auctionId": <Integer>,
+        "userId": <Integer>,
+        "amount": <Integer>
+    }
+    }
+    ```
+
+#### POST `/bid/all` → Visualizza tutte le puntate di un'asta in fase di rilancio (solo per il bid-creator e per partecipante iscritto)
+  - **Corpo della richiesta**:
+
+    | Key                 | Value                                |
+    |---------------------|--------------------------------------|
+    | `auctionId`         | Id dell'asta                         |
+
+  - **Esempio di risposta**:
+    ```json
+    [
+      {
+          "id": <Integer>,
+          "userId": <Integer>,
+          "auctionId": <Integer>,
+          "amount": <Decimal>,
+          "createdAt": <DATE>,
+          "updatedAt": <DATE>
+      },
+      {
+           "id": <Integer>,
+          "userId": <Integer>,
+          "auctionId": <Integer>,
+          "amount": <Decimal>,
+          "createdAt": <DATE>,
+          "updatedAt": <DATE>
+      }
+    ]
+    ```
+
+
+## Statistiche
+
+#### GET `/stats/history?from=<data_inizio>&to=<data_fine>&format=pdf` → storico aste chiuse (bid-participant)
+  - **Parametri della richiesta**:
+
+    | Paramtro         | Descrizione                                         |
+    |------------------|-----------------------------------------------------|
+    | `from`           | Data inizio filtro                                  |
+    | `to`             | Data fine filtro                                    |
+    | `format`         | Formato in cui ottenere i dati (opzionale)          |
+
+  - **Esempio di risposta**:
+      ```json
         {
         "won": [ 
             {
@@ -315,75 +453,49 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
             }
         ]
         }
-        
-        ```
-
-#### `/wallet`
-
-- `GET /balance` → saldo wallet
-    - **Esempio di risposta**:
-        ```json
-        {
-        "balance": <Decimal>
-        }
-        ```
-- `POST /recharge` → ricarica wallet (admin)
-     - **Corpo della richiesta**:
-
-        | Key                  | Value                           |
-        |----------------------|---------------------------------|
-        | `userId`             | Id dell'utente                  |
-        | `amount`             | Somma da ricaricare             |
-
-    - **Esempio di risposta**:
-    ```json
-    {
-    "message": "Ricarica completata",
-    "balance": <Decimal>
-    }
     ```
 
-#### `/bid`
+#### GET `/stats/expenses?from=<data_inizio>&to=<data_fine>` → visualizza spesa effettuata in un dato periodo (bid-participant)
+  - **Parametri della richiesta**:
 
-- `POST /bid` → piazza un’offerta (solo se partecipante iscritto)
-     - **Corpo della richiesta**:
+    | Paramtro         | Descrizione                                         |
+    |------------------|-----------------------------------------------------|
+    | `from`           | Data inizio filtro                                  |
+    | `to`             | Data fine filtro                                    |
 
-    | Key                 | Value                                |
-    |---------------------|--------------------------------------|
-    | `auctionId`         | Id dell'asta                         |
-    | `amount`            | Totale di quanto si vuole rilanciare |
-
-    - **Esempio di risposta**:
-    ```json
-    {
-    "message": "Offerta registrata con successo",
-    "bid": {
-        "createdAt": <DATE>,
-        "updatedAt": <DATE>,
-        "id": <Integer>,
-        "auctionId": <Integer>,
+  - **Esempio di risposta**:
+      ```json
+      {
         "userId": <Integer>,
-        "amount": <Integer>
-    }
-    }
+        "totalParticipationFees": <Decimal>,
+        "totalWinningSpending": <Decimal>,
+        "total": <Decimal>,
+        "from": <DATE>,
+        "to": <DATE>
+      }
     ```
 
-#### `/user`
+#### GET `/stats?from=<data_inizio>&to=<data_fine>` → visualizza statistiche sul numero di aste completate con successo, numero di aste terminate per insufficienza di iscritti e la media del rapporto tra numero di puntate effettuate e numero massimo di puntate effettuabili (admin)
+  - **Parametri della richiesta**:
 
-- `POST /login`
-     - **Corpo della richiesta**:
+    | Paramtro         | Descrizione                                         |
+    |------------------|-----------------------------------------------------|
+    | `from`           | Data inizio filtro                                  |
+    | `to`             | Data fine filtro                                    |
 
-    | Key                    | Value                                |
-    |------------------------|--------------------------------------|
-    | `email`                | Email dell'utente                    |
-    | `password`             | Password dell'utente                 |
-
-    - **Esempio di risposta**:
-    ```json
-    {
-        "token": <created_auth_token>
-    }
+  - **Esempio di risposta**:
+      ```json
+      {
+        "intervallo": {
+            "from": <DATE>,
+            "to": <DATE>
+        },
+        "asteCompletate": <Integer>,
+        "asteAnnullate": <Integer>,
+        "mediaRapportoPuntate": <Decimal>
+      }
     ```
+
 
 ---
 
@@ -504,13 +616,7 @@ Lo scheduler è responsabile delle seguenti transizioni di stato nel ciclo di vi
 | `open`        | L'orario di `startTime` è arrivato | Avvio dell'asta               | `bidding`         |
 | `bidding`     | L'orario di `endTime` è passato    | Calcolo vincitore e chiusura  | `closed`          |
 
-### Esempio di output nella console
 
-Durante il funzionamento, lo scheduler scrive nella console informazioni utili per il debug e il monitoraggio:
-
-
-
-### Conclusioni
 
 Grazie allo scheduler, il sistema di aste è in grado di mantenersi aggiornato in modo autonomo, garantendo un'esperienza utente fluida, affidabile e coerente con le tempistiche definite. In caso di esigenze future, la logica dello scheduler può essere estesa per includere nuove automazioni, notifiche personalizzate, o regole più complesse per la gestione dello stato delle aste.
 
@@ -600,14 +706,14 @@ Tutte le classi middleware derivano da una classe base comune (`BaseHandler`) e 
 - **Isolamento delle responsabilità**  
   Ogni middleware si occupa esclusivamente di una singola responsabilità (es. autenticazione, validazione, parsing). Questo rende il codice più modulare, comprensibile e facilmente modificabile. Ad esempio, si può cambiare la logica di autorizzazione senza interferire con il parsing della richiesta o altre fasi.
 
+- **Responsabilità distribuita**  
+  Invece di accentrare tutta la logica (autenticazione, validazione, parsing, ecc.) in un'unica funzione complessa, ogni classe gestisce un compito ben definito, favorendo una progettazione pulita e facilmente testabile.
+
 - **Espandibilità**  
   Aggiungere nuove middleware è semplice e non richiede modifiche sostanziali alla struttura esistente.
 
 - **Ordine flessibile di esecuzione**  
   È possibile modificare l’ordine delle middleware in base alle necessità, ad esempio eseguendo la validazione prima dell’autenticazione, senza dover riscrivere la logica delle classi stesse.
-
-- **Responsabilità distribuita**  
-  Invece di accentrare tutta la logica (autenticazione, validazione, parsing, ecc.) in un'unica funzione complessa, ogni classe gestisce un compito ben definito, favorendo una progettazione pulita e facilmente testabile.
 
 
 I file a cui si fa riferimento si trovano nella cartella "src/middlewares".
@@ -628,11 +734,11 @@ Nel progetto, questo pattern è stato impiegato per gestire la creazione central
 - **Minore accoppiamento tra componenti**  
   Attraverso l’uso della factory, si evita che le classi che generano errori dipendano direttamente dalle implementazioni specifiche degli oggetti di errore. Questo migliora la modularità e facilita la manutenzione.
 
-- **Maggiore flessibilità**  
-  L’eventuale modifica della logica di creazione degli errori non comporta interventi nel codice delle classi che li utilizzano, rendendo l’architettura più flessibile e aperta all’estensione.
-
 - **Gestione centralizzata degli errori**  
   Accentrando la creazione degli errori, si ottiene una gestione più coerente a livello applicativo. Inoltre, è più semplice integrare funzionalità trasversali come logging o metriche in un unico punto.
+
+- **Maggiore flessibilità**  
+  L’eventuale modifica della logica di creazione degli errori non comporta interventi nel codice delle classi che li utilizzano, rendendo l’architettura più flessibile e aperta all’estensione.
 
 - **Codice più chiaro**  
   Separando la logica di istanziazione da quella di utilizzo, il codice diventa più ordinato e leggibile. Le classi chiamanti non si occupano più dei dettagli su come vengono costruiti gli errori.
@@ -651,60 +757,28 @@ Il pattern si basa generalmente su tre elementi fondamentali:
 - **Metodo statico (o proprietà statica)**: consente di ottenere l’unica istanza esistente.
 - **Variabile statica**: memorizza l’istanza Singleton, creata una sola volta e riutilizzata a ogni accesso successivo.
 
-Nel backend sviluppato, il pattern Singleton è stato adottato in per la gestione dei DAO.
+Nel backend sviluppato, è stato adottato il pattern Singleton per la gestione dei Data Access Object (DAO), al fine di garantire un'unica istanza condivisa per ciascun DAO e ottimizzare così l'accesso alle risorse persistenti
 
 ### Vantaggi derivanti dall’utilizzo del pattern
 
+- **Stato coerente e condiviso**  
+  Il pattern garantisce che tutte le componenti dell’applicazione accedano alla stessa istanza, assicurando coerenza nello stato e nei dati condivisi.
+
 - **Controllo delle risorse condivise**  
-  Centralizzando l’accesso a componenti critici (come Redis), si evita che più istanze tentino di manipolare contemporaneamente lo stesso stato, prevenendo condizioni di gara o conflitti.
+  Centralizzando l’accesso a componenti critici, si evita che più istanze tentino di manipolare contemporaneamente lo stesso stato, prevenendo condizioni di gara o conflitti.
 
 - **Ottimizzazione dell’uso delle risorse**  
-  Nel caso di connessioni come quella verso Redis, avere una sola istanza riduce il carico legato alla creazione/rimozione di connessioni multiple e favorisce le prestazioni, soprattutto in ambienti con accessi frequenti.
-
-- **Stato coerente e condiviso**  
-  L’uso di `InferenceQueueService` come Singleton garantisce che tutti i job vengano gestiti tramite un’unica coda, mantenendo una visione uniforme e sincronizzata dell’elaborazione.
-
-- **Facilità di debug e manutenzione**  
-  Disporre di un’unica istanza semplifica l’individuazione e la correzione dei problemi, poiché è chiaro dove intervenire in caso di errori o malfunzionamenti.
+  Avere una sola istanza riduce il carico legato alla creazione/rimozione di connessioni multiple e favorisce le prestazioni, soprattutto in ambienti con accessi frequenti.
 
 - **Evitare istanziazioni multiple involontarie**  
   Il pattern impedisce che, per errore o distrazione, vengano creati oggetti duplicati della stessa classe — situazione che, in contesti come quello delle code o delle connessioni, potrebbe causare malfunzionamenti gravi o rallentamenti del sistema.
 
+- **Facilità di debug e manutenzione**  
+  Disporre di un’unica istanza semplifica l’individuazione e la correzione dei problemi, poiché è chiaro dove intervenire in caso di errori o malfunzionamenti.
+
 I file a cui si fa riferimento si trovano nella cartella "src/dao".
 
   ![Alt text](documentazione/singleton.png)
-
----
-
-### Design Pattern Utilizzati
-
-#### Factory Pattern
-
-Utilizzato per la gestione centralizzata degli errori. È stata definita una **classe `ErrorFactory`** che restituisce oggetti di errore a partire da un `enum`.
-
-✔️ Vantaggi:
-- Codice più pulito e leggibile
-- Consistenza nella gestione degli errori
-- Più facile loggare o monitorare
-
-#### Chain of Responsibility
-
-Utilizzato per strutturare i middleware:
-
-- Ogni middleware (`Handler`) può eseguire un controllo o passare la richiesta al successivo
-- È stato implementato un `BaseHandler` e vari handler concreti (es. `AuthHeaderHandler`, `TokenValidationHandler`, ecc.)
-
-✔️ Vantaggi:
-- Separazione delle responsabilità
-- Riutilizzabilità e ordine flessibile
-- Facilità di testing
-
-
----
-
-- Use Case
-- Architettura
-- Sequenze (Registrazione, Login, Partecipazione, Offerta, ecc.)
 
 ---
 
@@ -714,12 +788,30 @@ Tutte le rotte sono state provate utilizzando Postman, ecco il link per ottenere
 
 🔗 *[link al workspace Postman (se disponibile)]*
 
----
 
-### Estensioni Future
+## Sviluppi futuri 
+### Gestione delle code di puntata con BullMQ e Redis
 
-- Gestore delle code
-- Dashboard per admin
-- Notifiche email ai vincitori
+Per migliorare la gestione delle puntate durante la fase di rilancio, soprattutto in presenza di più aste attive contemporaneamente, si prevede l'integrazione di **BullMQ** insieme a **Redis**.
 
----
+#### Obiettivi
+
+- **Gestione concorrente** delle puntate su più aste attive nello stesso momento.
+- **Coda separata per ogni asta**, così da isolare i flussi di puntata.
+- **Ordine garantito** delle puntate grazie al sistema FIFO di BullMQ.
+- **Elaborazione asincrona** per migliorare le performance e ridurre il carico.
+- **Scalabilità**, con possibilità di eseguire più worker in parallelo.
+- **Monitoraggio e debugging** attraverso strumenti integrati.
+
+#### Tecnologie previste
+
+- **BullMQ**: sistema di code per Node.js basato su Redis.
+- **Redis**: archivio dati in-memory veloce, usato per gestire e conservare le code.
+
+#### Vantaggi
+
+- Riduzione del rischio di errori nelle puntate (es. doppie puntate o fuori ordine)
+- Esperienza utente più fluida, specialmente nelle fasi finali dell’asta
+- Sistema pronto per la **scalabilità** e per future estensioni (es. WebSocket)
+
+> Questa funzionalità non è ancora implementata, ma costituisce una delle principali priorità per le prossime versioni del progetto.
