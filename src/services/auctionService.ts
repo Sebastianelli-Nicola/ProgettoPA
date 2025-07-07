@@ -55,10 +55,8 @@ export class AuctionService {
       const startTime = new Date(data.startTime);
 
       data.startTime = new Date(new Date(data.startTime).setSeconds(0, 0));
-      data.endTime = new Date(new Date(data.startTime).getTime() + data.relaunchTime * 60000);
+      data.endTime = new Date(new Date(data.startTime).getTime() + data.relaunchTime * 60000);  // Calcola endTime aggiungendo relaunchTime in minuti
 
-       
-      //data.endTime = new Date(startTime.getTime() + data.relaunchTime * 60000); // Calcola endTime aggiungendo relaunchTime in minuti
      
       if (startTime < now) {
         throw ErrorFactory.createError(
@@ -67,13 +65,6 @@ export class AuctionService {
         );
       }
 
-      /*const endTime = new Date(data.startTime);
-      if (endTime <= startTime){
-        throw ErrorFactory.createError(
-          ErrorType.Validation,
-          "La data e ora di fine dell'asta devono essere successive a quella di inizio."
-        );
-      }*/
 
       // Controlla che tutti i valori numerici siano positivi
       const numericFields = [

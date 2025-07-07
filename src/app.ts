@@ -44,10 +44,6 @@ app.use('/wallet', walletRoutes);     // Rotte per i portafogli degli utenti
 app.use('/stats', statsRoutes);       // Rotte per le statistiche
 
 
-// Test route
-app.get("/", (_, res) => {res.send("API AuctionSnap avviata!")});
-app.get("/test", (_, res) => {res.send("Test OK!");});
-
 // Middleware globale per la gestione degli errori
 app.use(errorHandler);
 

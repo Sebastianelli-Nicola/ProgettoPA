@@ -20,7 +20,7 @@ const auctionService = new AuctionService();
  */
 export const getAuctions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { status } = req.query;
+    const { status } = req.body;
     const auctions = await auctionService.getAuctions(typeof status === 'string' ? status : undefined);
     res.json(auctions);
   } catch (error: any) {
