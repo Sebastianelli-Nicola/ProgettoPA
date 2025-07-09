@@ -1,4 +1,4 @@
-import { StatsService } from '../services/statsService';  // Aggiorna il path se serve
+import { StatsService } from '../services/statsService';
 
 describe('StatsService - getUserExpenses', () => {
   let service: StatsService;
@@ -6,13 +6,12 @@ describe('StatsService - getUserExpenses', () => {
   beforeEach(() => {
     service = new StatsService();
 
-    // Mock del participationsDAO interno
     service['participationDAO'] = {
-      findParticipations: jest.fn(),
+      findAllByUserWithDateAndAuction: jest.fn(),
     } as any;
 
     service['bidDAO'] = {
-      findWinningBid: jest.fn(),
+      findTopBidByAuction: jest.fn(),
     } as any;
   });
 
@@ -27,7 +26,7 @@ describe('StatsService - getUserExpenses', () => {
       { fee: '7.25', isWinner: true, auctionId: 3 },
     ]);
 
-    (service['bidDAO'].findTopBidByAuction as jest.Mock).mockImplementation(async (userId, auctionId) => {
+    (service['bidDAO'].findTopBidByAuction as jest.Mock).mockImplementation(async (auctionId) => {
       if (auctionId === 1) return { amount: '100.00' };
       if (auctionId === 3) return { amount: 50 };
       return null;
@@ -37,9 +36,9 @@ describe('StatsService - getUserExpenses', () => {
 
     expect(result).toEqual({
       userId: 123,
-      totalParticipationFees: '22.75',  // 10.50 + 5.00 + 7.25
-      totalWinningSpending: '150.00',   // 100 + 50
-      total: '172.75',                  // 22.75 + 150.00
+      totalParticipationFees: '22.75',
+      totalWinningSpending: '150.00',
+      total: '172.75',
       from,
       to,
     });
@@ -47,6 +46,7 @@ describe('StatsService - getUserExpenses', () => {
 
   it('restituisce zero se nessuna partecipazione', async () => {
     (service['participationDAO'].findAllByUserWithDateAndAuction as jest.Mock).mockResolvedValue([]);
+
     const result = await service.getUserExpenses(456);
 
     expect(result).toEqual({
