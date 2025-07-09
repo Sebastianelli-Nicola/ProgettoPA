@@ -25,6 +25,7 @@ import bidRoutes from './routes/bid';
 import walletRoutes from './routes/wallet';
 import statsRoutes from './routes/stats';
 import './scheduler';
+import { runMigrationsAndSeeds } from "./DB/dbMigrateSeed";
 
 // Carica le variabili d'ambiente dal file .env
 dotenv.config();
@@ -39,7 +40,7 @@ app.use(express.json());
 // Rotte principali
 app.use("/user", authRoutes);         // Rotte per l'autenticazione
 app.use("/auction", auctionRoutes);   // Rotte per le aste
-app.use('/bid', bidRoutes);       // Rotte per le puntate
+app.use('/bid', bidRoutes);           // Rotte per le puntate
 app.use('/wallet', walletRoutes);     // Rotte per i portafogli degli utenti
 app.use('/stats', statsRoutes);       // Rotte per le statistiche
 
@@ -47,21 +48,33 @@ app.use('/stats', statsRoutes);       // Rotte per le statistiche
 // Middleware globale per la gestione degli errori
 app.use(errorHandler);
 
-// Connessione al database
+
 // Inizializza l'istanza di Sequelize e autentica la connessione al database
 const sequelize = getSequelizeInstance(); 
-sequelize.authenticate()
-  .then(() => console.log("✅ Connessione al database stabilita con successo!"))
-  .catch((error) => console.error("Errore connessione DB:", error));
 
-// Avvia il server HTTP e inizializza il WebSocket
-// Crea un server HTTP utilizzando l'app Express e inizializza il WebSocket server
-const server = http.createServer(app);
-initWebSocket(server); // <== INIZIALIZZA WEBSOCKET SERVER
+// Start server e connessione al database
+async function startServer() {
+  try {
+    await sequelize.authenticate();
+    console.log("Connessione al database stabilita.");
+    await runMigrationsAndSeeds();
 
-// Avvia il server sulla porta specificata
-server.listen(port, () => {
-  console.log(`🚀 Server attivo su http://localhost:${port}`);
-});
+    // Avvia il server HTTP e inizializza il WebSocket
+    // Crea un server HTTP utilizzando l'app Express e inizializza il WebSocket server
+    const server = http.createServer(app);
+    initWebSocket(server);
+
+    // Avvia il server sulla porta specificata
+    server.listen(port, () => {
+      console.log(`Server attivo su http://localhost:${port}`);
+    });
+
+  } catch (error) {
+    console.error("Impossibile connettersi al database:", error);
+    process.exit(1); // Arresta l'app se la connessione fallisce
+  }
+}
+
+startServer();
 
 export default app; 

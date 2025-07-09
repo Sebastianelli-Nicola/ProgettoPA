@@ -20,8 +20,8 @@ const auctionService = new AuctionService();
  */
 export const getAuctions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { status } = req.body;
-    const auctions = await auctionService.getAuctions(typeof status === 'string' ? status : undefined);
+    const status = typeof req.body?.status === 'string' ? req.body.status : undefined;
+    const auctions = await auctionService.getAuctions(status);
     res.json(auctions);
   } catch (error: any) {
     console.error('Errore lettura aste:', error);
@@ -60,6 +60,12 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
       bidsPerParticipant == null || startTime == null || /*endTime == null ||*/ relaunchTime == null
     ) {
       return next(ErrorFactory.createError(ErrorType.MissingData));
+    }
+
+    const validStatuses = ['created', 'open'];
+
+    if (status != null && !validStatuses.includes(status)) {
+      return next(ErrorFactory.createError(ErrorType.InvalidAuctionStatus));
     }
 
 

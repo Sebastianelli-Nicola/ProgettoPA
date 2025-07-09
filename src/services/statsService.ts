@@ -136,13 +136,13 @@ export class StatsService {
     doc.text('Storico aste aggiudicate:', { underline: true });
     if (history.won.length === 0) doc.text('Nessuna');
     history.won.forEach(item => {
-      doc.text(`Asta: ${item.id} | Titolo: ${item.title} | Stato: ${item.status} | Vincitore: Sì | Costo Totale: ${item.totalCost} | Data e Ora di aggiudicazione: ${item.endTime}`);
+      doc.text(`Asta: ${item.id} | Titolo: ${item.title} | Stato: ${item.status} | Vincitore: Sì | Costo Totale (inclusa fee): ${item.totalCost} | Data e Ora di aggiudicazione: ${item.endTime}`);
     });
     doc.moveDown();
     doc.text('Storico aste NON aggiudicate:', { underline: true });
     if (history.lost.length === 0) doc.text('Nessuna');
     history.lost.forEach(item => {
-      doc.text(`Asta: ${item.id} | Titolo: ${item.title} | Stato: ${item.status} | Vincitore: No | Costo Totale: ${item.totalCost} | Data e Ora di aggiudicazione: ${item.endTime}`);
+      doc.text(`Asta: ${item.id} | Titolo: ${item.title} | Stato: ${item.status} | Vincitore: No | Costo Totale (inclusa fee): ${item.totalCost} | Data e Ora di aggiudicazione: ${item.endTime}`);
     });
     return doc;
   }

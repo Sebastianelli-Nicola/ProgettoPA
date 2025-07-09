@@ -92,8 +92,6 @@ export const getAuctionHistory = async (req: AuthRequest, res: Response, next: N
       to ? new Date(to as string) : undefined
     );
 
-    console.log('FORMAT:', format);
-
 
     // Normalizza il parametro format per gestire PDF o JSON
     const formatParam = Array.isArray(format) ? format[0] : format;

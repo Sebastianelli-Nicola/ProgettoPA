@@ -12,6 +12,7 @@ import jwt from 'jsonwebtoken';
 import { getWSS } from './websocketServer'; 
 import { ParticipationDAO } from '../dao/participationDAO';
 import { AuctionDAO } from '../dao/auctionDAO';
+import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 
 
 /**
@@ -70,7 +71,8 @@ export const handleWebSocketConnection = (ws: WebSocket): void => {
         try {
           decoded = jwt.verify(data.token, process.env.JWT_SECRET!);
         } catch {
-          ws.send(JSON.stringify({ error: 'Token non valido o scaduto' }));
+          const error = ErrorFactory.createError(ErrorType.InvalidToken);
+          ws.send(JSON.stringify({ error: error.message }));
           ws.close();
           return;
         }
@@ -79,7 +81,8 @@ export const handleWebSocketConnection = (ws: WebSocket): void => {
 
         // Verifica che userId e auctionId siano definiti
         if (typeof client.userId !== 'number' || typeof client.auctionId !== 'number') {
-          ws.send(JSON.stringify({ error: 'Dati utente o asta non validi' }));
+          const error = ErrorFactory.createError(ErrorType.InvalidUserId, 'userId o auctionId mancanti o non validi');
+          ws.send(JSON.stringify({ error: error.message }));
           ws.close();
           return;
         }
@@ -90,14 +93,16 @@ export const handleWebSocketConnection = (ws: WebSocket): void => {
         const isCreator = auction && auction.creatorId === client.userId;
 
         if (!isParticipant && !isCreator) {
-          ws.send(JSON.stringify({ error: 'Non autorizzato per questa asta' }));
+          const error = ErrorFactory.createError(ErrorType.Authorization);
+          ws.send(JSON.stringify({ error: error.message }));
           ws.close();
           return;
         }
         console.log(`[WS] Client ${client.userId} collegato all'asta ${client.auctionId}`);
       }
     } catch (err) {
-      ws.send(JSON.stringify({ error: 'Messaggio malformato o errore interno' }));
+      const error = ErrorFactory.createError(ErrorType.Generic);
+      ws.send(JSON.stringify({ error: error.message }));
       ws.close();
     }
   });

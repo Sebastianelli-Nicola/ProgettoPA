@@ -41,7 +41,6 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const result = await userService.login(email, password);
     res.status(HTTPStatus.OK).json(result); // Login riuscito, restituisce token/dati utente
   } catch (error: any) {
-    console.error('Errore login:', error);
     next(error);
   }
 };

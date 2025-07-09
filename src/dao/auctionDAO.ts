@@ -66,7 +66,7 @@ export class AuctionDAO {
    * @param status Nuovo stato da impostare.
    * @param transaction (Opzionale) Transazione Sequelize.
    * @returns L'istanza Auction aggiornata.
-   * @throws Errore 404 se l'asta non esiste.
+   * 
    */
   async updateStatus(id: number, status: string, transaction?: Transaction): Promise<Auction> {
     const auction = await Auction.findByPk(id, { transaction });

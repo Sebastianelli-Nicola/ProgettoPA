@@ -120,7 +120,7 @@ Il backend è strutturato secondo un’architettura modulare e scalabile, esegui
 - **WebSocket Server**  
   Utilizzato per inviare aggiornamenti in tempo reale agli utenti, ad esempio in fase di rilancio o alla chiusura di un’asta.
 
-#### 🔍 Struttura dei moduli
+#### Struttura dei moduli
 
 - **Controller**  
   Gestiscono le richieste HTTP e delegano le operazioni ai DAO o ai servizi.
@@ -199,7 +199,7 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
 
 ### Aste
 
-#### POST `/auction` → crea una nuova asta (bid-creator)
+#### POST `/auction` → crea una nuova asta (bid-creator), se lo status non viene inserito di default è 'created'
     
   - **Corpo della richiesta**:
 
@@ -214,7 +214,7 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
     | `bidsPerParticipant`   | Numero di puntate per partecipante     |
     | `startTime`            | Ora e data d'inizio                    |
     | `relaunchTime`         | Tempo per la fase di rilancio          |
-    | `status`               | Stato dell'asta                        |
+    | `status`               | Stato dell'asta (opzionale)            |
 
     - **Esempio di risposta**:
     ```json
@@ -223,22 +223,63 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
       "auction": {
         "createdAt": <DATE>,
         "updatedAt": <DATE>,
+        "status": <String>,
         "id": <Integer>,
         "title": <String>,
+        "creatorId": <Integer>,
         "minParticipants": <Integer>,
         "maxParticipants": <Integer>,
         "entryFee": <Decimal>,
         "maxPrice": <Decimal>,
-        "minIncrement": <Decimal>,
+        "bidIncrement": <Decimal>,
         "bidsPerParticipant": <Integer>,
         "startTime": <DATE>,
+        "endTime": <DATE>,
         "relaunchTime": <Integer>,
-        "status": <String>,
-        "endTime": <DATE>
         }
     }
     ```
-#### GET `/auction` → elenca tutte le aste
+
+#### PATCH `/auction` → aggiorna stato di un'asta da created a open (bid-creator)
+    
+  - **Corpo della richiesta**:
+
+    | Key                 | Value                     |
+    |---------------------|---------------------------|
+    | `auctionId`         | Id dell'asta              |
+    | `status`            | Stato dell'asta           |
+
+    - **Esempio di risposta**:
+    ```json
+    {
+      "message": "Stato asta aggiornato con successo",
+      "auction": {
+        "id": <Integer>,
+        "title": <String>,
+        "creatorId": <Integer>,
+        "minParticipants": <Integer>,
+        "maxParticipants": <Integer>,
+        "entryFee": <Decimal>,
+        "maxPrice": <Decimal>,
+        "bidIncrement": <Decimal>,
+        "bidsPerParticipant": <Integer>,
+        "status": <String>,
+        "startTime": <DATE>,
+        "endTime": <DATE>,
+        "relaunchTime": <Integer>,
+        "createdAt": <DATE>,
+        "updatedAt": <DATE>,
+        }
+    }
+    ```
+
+#### GET `/auction` → elenca tutte le aste, è possibile applicare un filtro sullo stato
+
+  - **Corpo della richiesta**:
+
+    | Key                 | Value                      |
+    |---------------------|--------------------------- |
+    | `status`            | Stato dell'asta (opzionale)|
 
   - **Esempio di risposta**:
     ```json
@@ -246,32 +287,34 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
         {
             "id": <Integer>,
             "title": <String>,
+            "creatorId": <Integer>,
             "minParticipants": <Integer>,
             "maxParticipants": <Integer>,
             "entryFee": <Decimal>,
             "maxPrice": <Decimal>,
             "bidIncrement": <Decimal>,
             "bidsPerParticipant": <Integer>,
+            "status": <String>,
             "startTime": <DATE>,
             "endTime": <DATE>,
             "relaunchTime": <Integer>,
-            "status": <String>,
             "createdAt": <DATE>,
             "updatedAt": <DATE>,
         },
         {
             "id": <Integer>,
             "title": <String>,
+            "creatorId": <Integer>,
             "minParticipants": <Integer>,
             "maxParticipants": <Integer>,
             "entryFee": <Decimal>,
             "maxPrice": <Decimal>,
             "bidIncrement": <Decimal>,
             "bidsPerParticipant": <Integer>,
+            "status": <String>,
             "startTime": <DATE>,
             "endTime": <DATE>,
             "relaunchTime": <Integer>,
-            "status": <String>,
             "createdAt": <DATE>,
             "updatedAt": <DATE>,
         },
@@ -746,6 +789,33 @@ Nel progetto, questo pattern è stato impiegato per gestire la creazione central
 I file a cui si fa riferimento si trovano nella cartella "src/factory".
 
   ![Alt text](documentazione/error_factory.png)
+
+### DAO (Data Access Object)
+
+Il **DAO Pattern** è un pattern strutturale utilizzato per isolare la logica di accesso ai dati dal resto dell'applicazione. Consente di definire un'interfaccia ben precisa per tutte le operazioni di lettura e scrittura sul database, mantenendo il codice più pulito, manutenibile e facilmente testabile.
+
+Nel progetto, il DAO pattern è stato adottato per strutturare l’interazione con il database tramite **Sequelize ORM**. Ogni entità del dominio (es. User, Auction, Bid, Partipation, Wallet) dispone del proprio DAO dedicato, responsabile di gestire tutte le operazioni CRUD e query complesse.
+
+#### Vantaggi dell’adozione del DAO Pattern
+
+- **Separazione delle responsabilità**  
+  La logica applicativa (controller o service) non deve preoccuparsi dei dettagli di accesso ai dati. Questo favorisce un’architettura pulita e modulare.
+
+- **Riutilizzabilità**  
+  I metodi di accesso al database, una volta definiti in un DAO, possono essere riutilizzati in più parti dell’applicazione senza duplicazione di codice.
+
+- **Manutenibilità**  
+  Eventuali modifiche alla struttura del database o alle query si riflettono solo all’interno del DAO, senza impattare il resto dell’applicazione.
+
+- **Testabilità**  
+  Grazie all’astrazione fornita dal DAO, è più semplice scrivere test unitari e mockare le dipendenze legate al database.
+
+- **Centralizzazione delle query complesse**  
+  Le query SQL avanzate o le interazioni con più tabelle vengono incapsulate all’interno dei DAO, mantenendo il codice più leggibile altrove.
+
+
+I file relativi ai DAO si trovano nella cartella `src/dao`.
+
 
 ## Singleton
 
