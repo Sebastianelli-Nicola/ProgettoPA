@@ -35,6 +35,7 @@
     "pg": "^8.16.2",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",
+    "wait-on": "^8.0.3",
     "ws": "^8.18.2"
   },
   "devDependencies": {

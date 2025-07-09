@@ -323,7 +323,15 @@ export class AuctionService {
   async updateStatus(auctionId: number, status: string) {
     const sequelize = this.getSequelize();
     return sequelize.transaction(async (transaction) => {
-      return this.auctionDAO.updateStatus(auctionId, status, transaction);
+      const auction = await this.auctionDAO.findById(auctionId, transaction);
+      if (!auction) throw ErrorFactory.createError(ErrorType.AuctionNotFound);
+      if(status == 'open'){
+        if (auction?.status == 'created'){
+          return this.auctionDAO.updateStatus(auctionId, status, transaction);
+        }else  throw ErrorFactory.createError(ErrorType.InvalidAuctionStatus);
+      }else{
+        throw ErrorFactory.createError(ErrorType.InvalidAuctionStatus);
+      }
     });
   }
 
