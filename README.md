@@ -707,31 +707,79 @@ Ogni partecipante può visualizzare:
 
 #### Registrazione
 
+![Alt text](documentazione/Register.png)
+
 #### Login
+
+![Alt text](documentazione/login.png)
 
 #### Crea Asta
 
+![Alt text](documentazione/Create_Auction.png)
+
+#### Inizio Asta
+
+![Alt text](documentazione/Start_Auction.png)
+
+#### Chiusura Asta
+
+![Alt text](documentazione/Close_Auction.png)
+
+#### Aggiorna lo stato dell'asta
+
+![Alt text](documentazione/Update_Auction_Status.png)
+
 #### Visualizza elenco aste
+
+![Alt text](documentazione/Get_Auction.png)
 
 #### Visualizza puntate di un'asta in fase di rilancio
 
+![Alt text](documentazione/Get_Bids_For_Auction.png)
+
 #### Iscrizione all'asta
+
+![Alt text](documentazione/Join_Auction.png)
 
 #### Esegui puntata
 
+![Alt text](documentazione/Place_Bid.png)
+
 #### Verifica credito residuo
+
+![Alt text](documentazione/Get_Wallet_Balance.png)
 
 #### Visualizza storico aste
 
+![Alt text](documentazione/Get_Auction_History.png)
+
 #### Visualizza spesa effettuata
+
+![Alt text](documentazione/Get_User_Expenses.png)
 
 #### Visualizza statistiche globali
 
+![Alt text](documentazione/Get_Auction_Stats.png)
+
 #### Ricarica Wallet
+
+![Alt text](documentazione/Recharge_Wallet.png)
 
 ---
 
 ## Design Patterns Utilizzati nel Progetto
+
+### Model - Controller - Service
+Il progetto segue il pattern architetturale Model - Controller - Service, una struttura ampiamente adottata nello sviluppo di applicazioni backend per la sua capacità di favorire modularità, scalabilità e facilità di manutenzione, che a differenza del classico paradigma MVC (Model-View-Controller) omette la componente 'view', poiché in questo contesto non è prevista la gestione di interfacce utente. L’attenzione è quindi interamente rivolta alla strutturazione della logica applicativa e alla gestione dei dati.
+##### MODEL:
+ Il Model definisce la struttura dati dell’applicazione e gestisce l’interazione con il database. In questo progetto, i modelli sono implementati utilizzando Sequelize, un ORM per Node.js che consente di interfacciarsi con PostgreSQL in modo strutturato e ad alto livello. Sequelize permette di definire i modelli tramite classi o oggetti descrittivi, astraendo le query SQL sottostanti e garantendo un codice più chiaro, riutilizzabile e manutenibile.
+##### CONTROLLER:
+ I Controller costituiscono il punto di ingresso per tutte le richieste HTTP indirizzate all’applicazione. Il loro compito è ricevere le richieste dal client, estrarre e validare i parametri necessari (con eventuale supporto dei middleware), e coordinare il flusso operativo. Una volta validati i dati, i Controller delegano l’elaborazione alla corrispondente classe Service, incaricata di eseguire la logica applicativa. 
+ Oltre a smistare le richieste, i Controller sono responsabili della preparazione e formattazione delle risposte da restituire al client, comprensive di dati, messaggi di errore e codici di stato HTTP adeguati. Non contengono logica di business complessa, ma fungono da ponte tra il client e la logica applicativa, promuovendo una chiara separazione delle responsabilità e migliorando l’organizzazione del codice.
+##### SERVICE:
+ Il Service contengono la logica di business dell’applicazione. Nei service vengono implementate le funzionalità principali del sistema, come la gestione delle aste, il calcolo delle statistiche e la gestione dei portafogli degli utenti. . I Controller delegano ai Service l’esecuzione delle azioni, mantenendo così separati i ruoli: i Controller gestiscono il flusso delle richieste, mentre i Service si occupano dell’elaborazione vera e propria.
+
+
 
 ### Chain of Responsibility
 
