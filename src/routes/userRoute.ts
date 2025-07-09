@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import { registration, login } from '../controllers/authController';
+import { registration, login } from '../controllers/userController';
 
 const router = Router();
 

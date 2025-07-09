@@ -90,7 +90,14 @@ Assicurati di avere tutti i file .env necessari per installare il software
 Una volta attivo Docker, spostati nella cartella del progetto e tramite il terminale esegui:
 
 ```bash
-docker compose up
+tsc
+```
+
+Il comando tsc (TypeScript Compiler) compila i file .ts in .js. È necessario prima di usare sequelize-cli, che lavora con JavaScript.
+
+
+```bash
+docker -f docker-compose.dev.yml up
 ```
 
 L’applicazione è ora configurata e sarà disponibile su:
@@ -99,6 +106,21 @@ L’applicazione è ora configurata e sarà disponibile su:
 - **PostgreSQL**: configurato nella rete interna Docker  
 
 **Nota**: al primo avvio il seeding è automatico. Non sono necessarie operazioni sul database
+
+Nel caso il seeding o le migration non vengano eseguiti correttamente al primo avvio, puoi procedere manualmente seguendo questi passaggi:
+
+```bash
+docker-compose -f docker-compose.dev.yml exec app npx sequelize-cli db:migrate
+```
+
+```bash
+docker-compose -f docker-compose.dev.yml exec app npx sequelize-cli db:seed:all
+```
+
+Per accedere al database PostgreSQL dal container:
+```bash
+docker exec -it pg-auction psql -U postgres -d auction_db
+```
 
 ---
 
