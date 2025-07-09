@@ -19,12 +19,11 @@ import dotenv from 'dotenv';
 import { initWebSocket } from "./websocket/websocketServer"; // <- rinominato come suggerito
 import { getSequelizeInstance } from "./DB/sequelize";
 import { errorHandler } from "./middlewares/errorHandler";
-import authRoutes from "./routes/auth";
-import auctionRoutes from "./routes/auction";
-import bidRoutes from './routes/bid';
-import walletRoutes from './routes/wallet';
-import statsRoutes from './routes/stats';
-import './scheduler';
+import authRoutes from "./routes/userRoute";
+import auctionRoutes from "./routes/auctionRoute";
+import bidRoutes from './routes/bidRoute';
+import walletRoutes from './routes/walletRoute';
+import statsRoutes from './routes/statsRoute';
 import { runMigrationsAndSeeds } from "./DB/dbMigrateSeed";
 
 // Carica le variabili d'ambiente dal file .env
@@ -58,6 +57,9 @@ async function startServer() {
     await sequelize.authenticate();
     console.log("Connessione al database stabilita.");
     await runMigrationsAndSeeds();
+
+    // Import dinamico dello scheduler DOPO le migration/seed
+    await import('./scheduler');
 
     // Avvia il server HTTP e inizializza il WebSocket
     // Crea un server HTTP utilizzando l'app Express e inizializza il WebSocket server
