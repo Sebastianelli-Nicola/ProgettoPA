@@ -35,9 +35,6 @@ export class StatsService {
     // Trova le aste e le puntate corrispondenti
     const auctions = await this.statsDAO.findAuctionsWithBids(dateFilter);
 
-    // Trova le puntate corrispondenti
-    const bids = await this.statsDAO.findBidsByAuctionIds(auctions.map(a => a.id));
-
     let completedCount = 0;   // Conteggio delle aste completate
     let cancelledCount = 0;   // Conteggio delle aste annullate
     let totalBidsMassime = 0;  // Conteggio totale delle puntate massime
@@ -99,7 +96,6 @@ export class StatsService {
     }
   }
 
-  const total = totalFees + totalSpentOnWins;
 
     return {
     userId,

@@ -98,7 +98,26 @@ export class BidService {
      * @param auctionId ID dell'asta
      * @returns Array di offerte ordinate per data di creazione crescente
      */
-    async getBidsForAuction(auctionId: number) {
+    async getBidsForAuction(auctionId: number, userId: number) {
+      // Trova l'asta
+      const auctionDAO = AuctionDAO.getInstance();
+      const auction = await auctionDAO.findById(auctionId);
+      if (!auction) {
+        throw(ErrorFactory.createError(ErrorType.AuctionNotFound));
+      }
+
+      // Consenti solo se l'asta è in fase di rilancio
+      if (auction.status !== 'bidding') {
+        throw(ErrorFactory.createError(ErrorType.BidsViewNotAllowed));
+      }
+
+      // Verifica se l'utente è partecipante o creatore
+      const participationDAO = ParticipationDAO.getInstance();
+      const isParticipant = await participationDAO.findParticipation(userId, auctionId);
+      const isCreator = auction.creatorId === userId;
+      if (!isParticipant && !isCreator) {
+        throw(ErrorFactory.createError(ErrorType.BidsViewNotAuthorized));
+      }
       return this.bidDAO.findBidsByAuctionId(auctionId);
     }
 }

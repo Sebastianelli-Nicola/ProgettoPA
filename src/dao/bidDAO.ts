@@ -101,5 +101,12 @@ export class BidDAO {
       transaction,
     });
   }
+
+  async findBidsByAuctionIdAndUserId(auctionId: number, userId: number, transaction?: Transaction) {
+    return Bid.findOne({
+       where: { userId, auctionId },
+      order: [['amount', 'DESC']],
+    })
+  }
 }
 

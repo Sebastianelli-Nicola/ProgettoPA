@@ -9,7 +9,7 @@ import { NextFunction, Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 import { BidService } from '../services/bidService';
-import { Auction } from '../models/Auction';
+import { AuctionDAO } from '../dao/auctionDAO';
 import { ParticipationDAO } from '../dao/participationDAO';
 import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 import HTTPStatus from 'http-status-codes';
@@ -73,26 +73,8 @@ export const getBidsForAuction = async (req: AuthRequest, res: Response, next: N
       return next(ErrorFactory.createError(ErrorType.Authentication));
     }
 
-    // Trova l'asta
-    const auction = await Auction.findByPk(auctionId);
-    if (!auction) {
-      return next(ErrorFactory.createError(ErrorType.AuctionNotFound));
-    }
-
-    // Consenti solo se l'asta è in fase di rilancio
-    if (auction.status !== 'bidding') {
-      return next(ErrorFactory.createError(ErrorType.BidsViewNotAllowed));
-    }
-
-    // Verifica se l'utente è partecipante o creatore
-    const isParticipant = await participationDAO.findParticipation(userId, auctionId);
-    const isCreator = auction.creatorId === userId;
-    if (!isParticipant && !isCreator) {
-      return next(ErrorFactory.createError(ErrorType.BidsViewNotAuthorized));
-    }
-
     // Recupera tutti i rilanci per l'asta
-    const bids = await bidService.getBidsForAuction(auctionId);
+    const bids = await bidService.getBidsForAuction(auctionId, userId);
     res.json(bids);
   } catch (error: any) {
     next(error);

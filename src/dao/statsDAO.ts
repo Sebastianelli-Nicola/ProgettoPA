@@ -80,10 +80,8 @@ export class StatsDAO {
    * @returns L'offerta vincente o null se non esiste.
    */
   async findWinningBid(userId: number, auctionId: number) {
-    return Bid.findOne({
-      where: { userId, auctionId },
-      order: [['amount', 'DESC']],
-    });
+    const bidDAO = BidDAO.getInstance();
+    return bidDAO.findBidsByAuctionIdAndUserId(auctionId,userId);
   }
 
 
