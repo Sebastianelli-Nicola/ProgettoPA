@@ -8,6 +8,7 @@
 import { Auction, AuctionCreationAttributes } from '../models/Auction';
 import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 import { Op, Transaction } from 'sequelize';
+import { Bid } from '../models/Bid';
 
 export class AuctionDAO {
   private static instance: AuctionDAO;
@@ -40,7 +41,7 @@ export class AuctionDAO {
    * @returns Array di aste ordinate per data di creazione decrescente.
    */
   async getAuctions(status?: string): Promise<Auction[]> {
-    const allowedStatuses = ['created', 'open', 'bidding', 'closed'];
+    const allowedStatuses = ['created', 'open', 'bidding', 'closed', 'cancelled'];
     const statusStr = status && allowedStatuses.includes(status) ? status : undefined;
     const whereClause = statusStr ? { status: statusStr } : undefined;
     return Auction.findAll({ where: whereClause, order: [['createdAt', 'DESC']] });
@@ -134,6 +135,22 @@ export class AuctionDAO {
         endTime: { [Op.lte]: endTime },
       }, order: [['createdAt', 'DESC']] });
   }
+
+  /**
+     * Trova tutte le aste che hanno offerte, opzionalmente filtrate per data.
+     * 
+     * @param dateFilter Oggetto filtro per le date (es. { createdAt: { [Op.gte]: ... } })
+     * @returns Array di aste con le relative offerte.
+     */
+    async findAuctionsWithBids(dateFilter: any) {
+      return Auction.findAll({
+        where: dateFilter,
+        include: [{
+          model: Bid,
+          attributes: ['amount'],
+        }]
+      });
+    }
   
 }
 

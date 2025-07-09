@@ -38,6 +38,7 @@ export enum ErrorType {
   NotFound,
   AuctionStartFailed,
   AuctionCloseFailed,
+  InvalidDateRange,
   Scheduler,
   Generic
 }
@@ -284,6 +285,12 @@ class SchedulerError extends ApplicationError {
   }
 }
 
+class InvalidDateRange extends ApplicationError {
+  constructor(message = 'Intervallo di date non valido') {
+    super('InvalidDateRange', message, StatusCodes.BAD_REQUEST);
+  }
+}
+
 class GenericError extends ApplicationError {
   constructor(message = 'Errore interno del server') {
     super('GenericError', message, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -368,6 +375,8 @@ export class ErrorFactory {
         return new AuctionCloseFailedError(message);
       case ErrorType.Scheduler:
         return new SchedulerError(message);
+      case ErrorType.InvalidDateRange:
+        return new InvalidDateRange(message);
       default:
         return new GenericError(message);
     }

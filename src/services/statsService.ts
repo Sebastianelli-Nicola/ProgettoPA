@@ -3,17 +3,19 @@
  * 
  * Fornisce metodi per ottenere statistiche sulle aste e sulle spese degli utenti.
  */
-
-import { StatsDAO } from '../dao/statsDAO';
 import { Op } from 'sequelize';   
 import PDFDocument from 'pdfkit';
 import { BidDAO } from '../dao/bidDAO';
+import { AuctionDAO } from '../dao/auctionDAO';
+import { ParticipationDAO } from '../dao/participationDAO';
 
 /**
  * Servizio per la gestione delle statistiche.
  */
 export class StatsService {
-  private statsDAO = StatsDAO.getInstance();
+  private participationDAO = ParticipationDAO.getInstance(); 
+  private auctionDAO = AuctionDAO.getInstance(); 
+  private bidDAO = BidDAO.getInstance();
 
   /**
    * Ottiene le statistiche delle aste.
@@ -33,7 +35,7 @@ export class StatsService {
     }
 
     // Trova le aste e le puntate corrispondenti
-    const auctions = await this.statsDAO.findAuctionsWithBids(dateFilter);
+    const auctions = await this.auctionDAO.findAuctionsWithBids(dateFilter);
 
     let completedCount = 0;   // Conteggio delle aste completate
     let cancelledCount = 0;   // Conteggio delle aste annullate
@@ -78,7 +80,7 @@ export class StatsService {
    */
   async getUserExpenses(userId: number, from?: Date, to?: Date) {
   // Recupera tutte le partecipazioni dell'utente nel periodo specificato
-  const participations = await this.statsDAO.findParticipations(userId, from, to);
+  const participations = await this.participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
 
   let totalFees = 0;
   let totalSpentOnWins = 0;
@@ -88,7 +90,7 @@ export class StatsService {
     totalFees += fee;
 
     if (p.isWinner) {
-      const winningBid = await this.statsDAO.findWinningBid(userId, p.auctionId);
+      const winningBid = await this.bidDAO.findTopBidByAuction( p.auctionId );
       if (winningBid) {
         const amount = typeof winningBid.amount === 'string' ? parseFloat(winningBid.amount) : winningBid.amount;
         totalSpentOnWins += amount;
@@ -117,7 +119,41 @@ export class StatsService {
    * @returns Lo storico delle a cui a particpato l'utente
    */
   async getAuctionHistory(userId: number, from?: Date, to?: Date) {
-    return this.statsDAO.getAuctionHistory(userId, from, to);
+    // Recupera tutte le partecipazioni dell'utente nel periodo
+    const participations = await this.participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
+    const auctionIds = participations.map(p => p.auctionId);
+
+    // Recupera tutte le aste chiuse a cui ha partecipato
+    const auctions = await this.auctionDAO.findAllClosed(auctionIds);
+
+    // Crea una mappa per accedere rapidamente alle partecipazioni
+    const participationMap = new Map<number, any>();
+    participations.forEach(p => participationMap.set(p.auctionId, p));
+
+    // Per ogni asta chiusa, calcola info aggiuntive
+    const history = await Promise.all(auctions.map(async auction => {
+      const participation = participationMap.get(auction.id);
+      
+      let userBidTotal = 0;
+      if (participation) {
+        userBidTotal = await this.bidDAO.countByAuction(auction.id)
+          .then(count => count * Number(auction.bidIncrement));
+      }
+
+      const totalCost = Number(participation?.fee || 0) + userBidTotal;
+
+      return {
+        ...auction.toJSON(),
+        isWinner: participation?.isWinner || false,
+        endTime: auction.endTime,
+        totalCost
+      };
+    }));
+
+    const won = history.filter(a => a.isWinner);
+    const lost = history.filter(a => !a.isWinner);
+
+    return { won, lost };
   }
 
 

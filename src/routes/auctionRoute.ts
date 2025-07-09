@@ -15,7 +15,7 @@ const router = Router();
  * Solo gli utenti con ruolo 'admin' o 'bid-creator' possono creare un'asta
  * Richiede autenticazione JWT
  */
-router.post('/', authMiddlewareHandler.authWithRoles(['admin', 'bid-creator']), createAuction);
+router.post('/', authMiddlewareHandler.authWithRoles(['bid-creator']), createAuction);
 
 /**
  * Rotta GET per ottenere le aste

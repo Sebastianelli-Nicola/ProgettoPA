@@ -28,6 +28,9 @@ export const getAuctionStats = async (req: Request, res: Response, next: NextFun
     if (to && isNaN(Date.parse(to as string))) {
       return next(ErrorFactory.createError(ErrorType.InvalidToDate));
     }
+     if (to && from && new Date(from as string) > new Date(to as string)) {
+      return next(ErrorFactory.createError(ErrorType.InvalidDateRange));
+    }
 
     const stats = await statsService.getAuctionStats(from as string, to as string);
     res.json(stats);
@@ -58,6 +61,9 @@ export const getUserExpenses = async (req: AuthRequest, res: Response, next: Nex
     if (to && isNaN(Date.parse(to as string))) {
       return next(ErrorFactory.createError(ErrorType.InvalidToDate));
     }
+     if (to && from && new Date(from as string) > new Date(to as string)) {
+      return next(ErrorFactory.createError(ErrorType.InvalidDateRange));
+    }
 
     const expenses = await statsService.getUserExpenses(userId, new Date(from as string), new Date(to as string));
     res.status(HTTPStatus.OK).json(expenses);
@@ -84,6 +90,9 @@ export const getAuctionHistory = async (req: AuthRequest, res: Response, next: N
     }
     if (to && isNaN(Date.parse(to as string))) {
       return next(ErrorFactory.createError(ErrorType.InvalidToDate));
+    }
+    if (to && from && new Date(from as string) > new Date(to as string)) {
+      return next(ErrorFactory.createError(ErrorType.InvalidDateRange));
     }
 
     const history = await statsService.getAuctionHistory(

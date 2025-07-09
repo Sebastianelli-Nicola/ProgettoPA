@@ -83,24 +83,7 @@ export default {
 
     // 3. AUCTIONS
     await queryInterface.bulkInsert('auctions', [
-      {
-        title: 'Auction OPEN to BIDDING soon',
-        creatorId: 2,
-        minParticipants: 2,
-        maxParticipants: 5,
-        entryFee: 50,
-        maxPrice: 1000,
-        bidIncrement: 10,
-        bidsPerParticipant: 3,
-        status: 'open',
-        // startTime: auctionStartNow,
-        // endTime: new Date(auctionStartNow.getTime() + 2 * 60_000),
-        startTime: auctionStartIn2Min,
-        endTime: auctionEndIn3Min,
-        relaunchTime: 1,
-        createdAt: now,
-        updatedAt: now,
-      },
+      
       {
         title: 'Auction in BIDDING phase',
         creatorId: 2,
@@ -114,72 +97,6 @@ export default {
         startTime: auctionStartIn2Min,
         endTime: auctionEndIn3Min,
         relaunchTime: 1,
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        title: 'Auction CLOSED already',
-        creatorId: 3,
-        minParticipants: 2,
-        maxParticipants: 5,
-        entryFee: 50,
-        maxPrice: 1000,
-        bidIncrement: 10,
-        bidsPerParticipant: 3,
-        status: 'closed',
-        startTime: new Date(now.getTime() - 10 * 60_000),
-        endTime: new Date(now.getTime() - 5 * 60_000),
-        relaunchTime: 2,
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        title: 'Auction OPEN to BIDDING soon2',
-        creatorId: 2,
-        minParticipants: 2,
-        maxParticipants: 5,
-        entryFee: 50,
-        maxPrice: 1000,
-        bidIncrement: 10,
-        bidsPerParticipant: 3,
-        status: 'open',
-        // startTime: auctionStartNow,
-        // endTime: new Date(auctionStartNow.getTime() + 2 * 60_000),
-        startTime: auctionEndIn10Min,
-        endTime: auctionEndIn12Min,
-        relaunchTime: 2,
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        title: 'Auction in BIDDING phase2',
-        creatorId: 2,
-        minParticipants: 2,
-        maxParticipants: 5,
-        entryFee: 50,
-        maxPrice: 1000,
-        bidIncrement: 10,
-        bidsPerParticipant: 3,
-        status: 'open',
-        startTime: auctionEndIn10Min,
-        endTime: auctionEndIn12Min,
-        relaunchTime: 2,
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        title: 'Auction CLOSED already2',
-        creatorId: 3,
-        minParticipants: 2,
-        maxParticipants: 5,
-        entryFee: 50,
-        maxPrice: 1000,
-        bidIncrement: 10,
-        bidsPerParticipant: 3,
-        status: 'closed',
-        startTime: new Date(now.getTime() - 10 * 60_000),
-        endTime: new Date(now.getTime() - 5 * 60_000),
-        relaunchTime: 2,
         createdAt: now,
         updatedAt: now,
       },
@@ -203,25 +120,21 @@ export default {
 
     // 4. PARTICIPATIONS
     await queryInterface.bulkInsert('participations', [
-      { userId: 4, auctionId: 1, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
+      { userId: 6, auctionId: 1, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
       { userId: 5, auctionId: 1, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
-      { userId: 6, auctionId: 2, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
+      { userId: 4, auctionId: 2, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
       { userId: 5, auctionId: 2, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
-      { userId: 6, auctionId: 5, fee: 30, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
-      { userId: 5, auctionId: 5, fee: 30, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
-      { userId: 4, auctionId: 7, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
-      { userId: 5, auctionId: 7, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
-      { userId: 6, auctionId: 7, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
+      { userId: 6, auctionId: 2, fee: 50, isWinner: false, isValid: true, createdAt: now, updatedAt: now },
     ]);
 
     // 5. BIDS
     await queryInterface.bulkInsert('bids', [
-      { userId: 6, auctionId: 2, amount: 120, createdAt: now, updatedAt: now },
-      { userId: 5, auctionId: 2, amount: 130, createdAt: now, updatedAt: now },
-      { userId: 4, auctionId: 7, amount: 1, createdAt: new Date(now.getTime() + 121000), updatedAt: now }, // participant1
-      { userId: 5, auctionId: 7, amount: 1, createdAt: new Date(now.getTime() + 122000), updatedAt: now }, // participant2
-      { userId: 4, auctionId: 7, amount: 1, createdAt: new Date(now.getTime() + 123000), updatedAt: now }, // participant1
-      { userId: 6, auctionId: 7, amount: 1, createdAt: new Date(now.getTime() + 124000), updatedAt: now }, // participant3
+      { userId: 6, auctionId: 1, amount: 120, createdAt: now, updatedAt: now },
+      { userId: 5, auctionId: 1, amount: 130, createdAt: now, updatedAt: now },
+      { userId: 4, auctionId: 2, amount: 1, createdAt: new Date(now.getTime() + 121000), updatedAt: now }, // participant1
+      { userId: 5, auctionId: 2, amount: 1, createdAt: new Date(now.getTime() + 122000), updatedAt: now }, // participant2
+      { userId: 4, auctionId: 2, amount: 1, createdAt: new Date(now.getTime() + 123000), updatedAt: now }, // participant1
+      { userId: 6, auctionId: 2, amount: 1, createdAt: new Date(now.getTime() + 124000), updatedAt: now }, // participant3
     ]);
   },
 

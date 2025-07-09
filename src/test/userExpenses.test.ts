@@ -6,9 +6,12 @@ describe('StatsService - getUserExpenses', () => {
   beforeEach(() => {
     service = new StatsService();
 
-    // Mock del statsDAO interno
-    service['statsDAO'] = {
+    // Mock del participationsDAO interno
+    service['participationDAO'] = {
       findParticipations: jest.fn(),
+    } as any;
+
+    service['bidDAO'] = {
       findWinningBid: jest.fn(),
     } as any;
   });
@@ -18,13 +21,13 @@ describe('StatsService - getUserExpenses', () => {
     const from = new Date('2024-01-01');
     const to = new Date('2024-03-31');
 
-    (service['statsDAO'].findParticipations as jest.Mock).mockResolvedValue([
+    (service['participationDAO'].findAllByUserWithDateAndAuction as jest.Mock).mockResolvedValue([
       { fee: '10.50', isWinner: true, auctionId: 1 },
       { fee: 5.00, isWinner: false, auctionId: 2 },
       { fee: '7.25', isWinner: true, auctionId: 3 },
     ]);
 
-    (service['statsDAO'].findWinningBid as jest.Mock).mockImplementation(async (userId, auctionId) => {
+    (service['bidDAO'].findTopBidByAuction as jest.Mock).mockImplementation(async (userId, auctionId) => {
       if (auctionId === 1) return { amount: '100.00' };
       if (auctionId === 3) return { amount: 50 };
       return null;
@@ -43,7 +46,7 @@ describe('StatsService - getUserExpenses', () => {
   });
 
   it('restituisce zero se nessuna partecipazione', async () => {
-    (service['statsDAO'].findParticipations as jest.Mock).mockResolvedValue([]);
+    (service['participationDAO'].findAllByUserWithDateAndAuction as jest.Mock).mockResolvedValue([]);
     const result = await service.getUserExpenses(456);
 
     expect(result).toEqual({

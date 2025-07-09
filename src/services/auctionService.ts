@@ -130,6 +130,9 @@ export class AuctionService {
    * @returns Un array di aste con lo stato specificato.
    */
   async getAuctions(status?: string) {
+    if(status && !['created', 'open', 'bidding', 'closed', 'cancelled'].includes(status)) {
+      throw ErrorFactory.createError(ErrorType.Validation, 'Stato dell\'asta non valido.');
+    }
     return this.auctionDAO.getAuctions(status);
   }
 
@@ -219,16 +222,28 @@ export class AuctionService {
         throw ErrorFactory.createError(ErrorType.InvalidAuctionStatus, 'L\'asta non è nello stato "bidding"');
       }
 
+      const maxPrice = Number(auction.maxPrice);
+
       // 2. Recupera tutte le puntate ordinate per data
       const bids = await this.bidDAO.findBidsByAuctionId(auctionId, transaction);
+      console.log(`Trovate ${bids.length} puntate per l'asta con ID ${auctionId}.`);
       if (!bids.length) {
         console.warn(`Nessuna puntata per auctionId ${auctionId}, impossibile determinare vincitore.`);
         auction.status = 'closed';
-        await this.auctionDAO.save(auction, transaction);
-        return { winnerId: null, finalAmount: 0 };
+         const participants = await this.participationDAO.findValidParticipants(auctionId, transaction);
+        for (const participant of participants) {
+          const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
+          if (wallet) {
+            wallet.balance = parseFloat(Number(wallet.balance).toFixed(2));
+            wallet.balance += parseFloat(Number(maxPrice).toFixed(2));
+            await this.walletDAO.save(wallet, transaction);
+          }
       }
+      await this.auctionDAO.save(auction, transaction);
+      return { winnerId: null, finalAmount: 0 };
+    }
 
-      // 3. Conta quante puntate ha fatto ciascun utente
+    // 3. Conta quante puntate ha fatto ciascun utente
       const bidCountByUser: Record<number, number> = {};
       for (const bid of bids) {
         bidCountByUser[bid.userId] = (bidCountByUser[bid.userId] || 0) + 1;
@@ -263,7 +278,6 @@ export class AuctionService {
       const totalBids = bids.length;
       const increment = Number(auction.bidIncrement);
       const finalAmount = totalBids * increment;
-      const maxPrice = Number(auction.maxPrice);
 
       // 8. Rimborsa differenza al vincitore
       const winnerWallet = await this.walletDAO.findByUserId(winnerId, transaction);
@@ -290,9 +304,7 @@ export class AuctionService {
           const wallet = await this.walletDAO.findByUserId(participant.userId, transaction);
           if (wallet) {
             wallet.balance = parseFloat(Number(wallet.balance).toFixed(2));
-            const totalRefund =
-              parseFloat(Number(maxPrice).toFixed(2)) +
-              parseFloat(Number(auction.entryFee).toFixed(2));
+            const totalRefund = parseFloat(Number(maxPrice).toFixed(2));
             wallet.balance += totalRefund;
             await this.walletDAO.save(wallet, transaction);
           }

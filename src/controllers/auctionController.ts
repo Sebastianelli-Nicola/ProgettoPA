@@ -24,7 +24,6 @@ export const getAuctions = async (req: AuthRequest, res: Response, next: NextFun
     const auctions = await auctionService.getAuctions(status);
     res.json(auctions);
   } catch (error: any) {
-    console.error('Errore lettura aste:', error);
     next(error);
   }
 };

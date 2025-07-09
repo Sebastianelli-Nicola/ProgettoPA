@@ -74,7 +74,7 @@ export class BidDAO {
 
   /**
    * Trova l'offerta più alta per una specifica asta.
-   * In caso di parità di importo, prende la più vecchia.
+   * In caso di parità di importo, prende la più nuova.
    * 
    * @param auctionId ID dell'asta.
    * @param transaction (Opzionale) Transazione Sequelize.
@@ -83,7 +83,7 @@ export class BidDAO {
   async findTopBidByAuction(auctionId: number, transaction?: Transaction) {
     return Bid.findOne({
       where: { auctionId },
-      order: [['amount', 'DESC'], ['createdAt', 'ASC']],
+      order: [['amount', 'DESC'], ['createdAt', 'DESC']],
       transaction,
     });
   }
@@ -100,13 +100,6 @@ export class BidDAO {
       order: [['createdAt', 'ASC']],
       transaction,
     });
-  }
-
-  async findBidsByAuctionIdAndUserId(auctionId: number, userId: number, transaction?: Transaction) {
-    return Bid.findOne({
-       where: { userId, auctionId },
-      order: [['amount', 'DESC']],
-    })
   }
 }
 
