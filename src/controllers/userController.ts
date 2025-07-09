@@ -21,7 +21,7 @@ export const registration = async (req: Request, res: Response, next: NextFuncti
   try {
     const result = await userService.registration(req.body);
     res.status(HTTPStatus.CREATED).json(result);     // Utente creato con successo
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -40,7 +40,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     
     const result = await userService.login(email, password);
     res.status(HTTPStatus.OK).json(result); // Login riuscito, restituisce token/dati utente
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };

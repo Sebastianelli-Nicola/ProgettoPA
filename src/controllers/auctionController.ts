@@ -20,10 +20,17 @@ const auctionService = new AuctionService();
  */
 export const getAuctions = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    // Estrae il filtro 'status' dal corpo della richiesta, se è una stringa valida.
     const status = typeof req.body?.status === 'string' ? req.body.status : undefined;
+
+    // Richiama il servizio per ottenere le aste filtrate per stato.
     const auctions = await auctionService.getAuctions(status);
+
+    // Invia la lista delle aste come risposta JSON al client.
     res.json(auctions);
-  } catch (error: any) {
+
+  } catch (error) {
+    // In caso di errore, passa l'errore al middleware di gestione errori.
     next(error);
   }
 };
@@ -63,6 +70,7 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
 
     const validStatuses = ['created', 'open'];
 
+    // Verifica che lo stato, se fornito, sia uno tra quelli validi definiti in validStatuses
     if (status != null && !validStatuses.includes(status)) {
       return next(ErrorFactory.createError(ErrorType.InvalidAuctionStatus));
     }
@@ -83,7 +91,7 @@ export const createAuction = async (req: AuthRequest, res: Response, next: NextF
     });
 
     res.status(HTTPStatus.CREATED).json({ message: 'Asta creata con successo', auction: newAuction });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Errore creazione asta:', error);
     next(error);
   }
@@ -103,7 +111,7 @@ export const joinAuction = async (req: AuthRequest, res: Response, next: NextFun
     }
     const result = await auctionService.joinAuction(userId, auctionId);
     res.status(HTTPStatus.OK).json(result);
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -134,7 +142,7 @@ export const startAuction = async (req: AuthRequest, res: Response, next: NextFu
       });
       res.status(HTTPStatus.OK).json({ message: 'Asta avviata' });
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Errore startAuction:', error);
     next(error);
   }
@@ -162,7 +170,7 @@ export const closeAuction = async (req: AuthRequest, res: Response, next: NextFu
       winnerId: result.winnerId,
       finalAmount: result.finalAmount,
     });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -178,7 +186,7 @@ export const updateAuctionStatus = async (req: AuthRequest, res: Response, next:
     const { status } = req.body;
     const auction = await auctionService.updateStatus(auctionId, status);
     res.status(HTTPStatus.OK).json({ message: 'Stato asta aggiornato con successo', auction });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };

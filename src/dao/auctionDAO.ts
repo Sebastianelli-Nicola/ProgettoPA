@@ -41,12 +41,20 @@ export class AuctionDAO {
    * @returns Array di aste ordinate per data di creazione decrescente.
    */
   async getAuctions(status?: string): Promise<Auction[]> {
+    // Definisce gli stati ammessi per il filtro.
     const allowedStatuses = ['created', 'open', 'bidding', 'closed', 'cancelled'];
+
+    // Verifica se lo status fornito è presente nella lista degli stati ammessi,
+    // altrimenti imposta a undefined per non applicare il filtro.
     const statusStr = status && allowedStatuses.includes(status) ? status : undefined;
+
+    // Crea la clausola WHERE solo se lo status è valido; altrimenti non applica filtri.
     const whereClause = statusStr ? { status: statusStr } : undefined;
+
+    // Recupera tutte le aste dal database, filtrate per stato se richiesto,
+    // ordinate per data di creazione in ordine decrescente (più recenti prima).
     return Auction.findAll({ where: whereClause, order: [['createdAt', 'DESC']] });
   }
-
 
   /**
    * Trova un'asta per ID.
@@ -70,10 +78,19 @@ export class AuctionDAO {
    * 
    */
   async updateStatus(id: number, status: string, transaction?: Transaction): Promise<Auction> {
+    // Recupera l'asta tramite la sua chiave primaria (ID), eventualmente usando la transazione.
     const auction = await Auction.findByPk(id, { transaction });
+
+    // Se l'asta non esiste, solleva un errore specifico.
     if (!auction) throw ErrorFactory.createError(ErrorType.AuctionNotFound);
+
+    // Aggiorna il campo 'status' con il nuovo valore passato come parametro.
     auction.status = status as any;
+
+    // Salva le modifiche al database, usando la transazione se fornita.
     await auction.save({ transaction });
+
+    // Ritorna l'istanza aggiornata dell'asta.
     return auction;
   }
 

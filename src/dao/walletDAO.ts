@@ -66,22 +66,30 @@ export class WalletDAO {
    * @throws Errore se il wallet non esiste.
    */
   async recharge(userId: number, amount: number, transaction?: any): Promise<Wallet> {
+    // Cerca il wallet dell'utente specificato, eventualmente all'interno di una transazione.
     const wallet = await Wallet.findOne({ where: { userId }, transaction });
 
+    // Se il wallet non esiste, lancia un errore specifico.
     if (!wallet) {
       throw ErrorFactory.createError(ErrorType.WalletNotFound);
     }
 
-    // Converte tutto in numeri con 2 decimali
+    // Converte il saldo corrente in numero a virgola mobile con due decimali.
     const currentBalance = parseFloat(wallet.balance as unknown as string);
+
+    // Arrotonda l'importo da aggiungere a due decimali.
     const rechargeAmount = parseFloat(amount.toFixed(2));
 
+    // Calcola il nuovo saldo, anch'esso con due decimali.
     const newBalance = parseFloat((currentBalance + rechargeAmount).toFixed(2));
 
+    // Aggiorna il saldo del wallet.
     wallet.balance = newBalance;
 
+    // Salva le modifiche nel database, usando la transazione se fornita.
     await wallet.save({ transaction });
 
+    // Restituisce l'istanza aggiornata del wallet.
     return wallet;
   }
 

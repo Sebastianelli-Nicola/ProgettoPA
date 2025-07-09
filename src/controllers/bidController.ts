@@ -5,17 +5,14 @@
  * Ogni funzione restituisce risposte HTTP appropriate e gestisce eventuali errori.
  */
 
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth/JWTAuthHandler';
 import { broadcastToAuction } from '../websocket/websockethandlers';
 import { BidService } from '../services/bidService';
-import { AuctionDAO } from '../dao/auctionDAO';
-import { ParticipationDAO } from '../dao/participationDAO';
 import { ErrorFactory, ErrorType } from '../factory/errorFactory';
 import HTTPStatus from 'http-status-codes';
 
 const bidService = new BidService();
-const participationDAO = ParticipationDAO.getInstance();
 
 
 /**
@@ -27,17 +24,11 @@ export const placeBid = async (req: AuthRequest, res: Response, next: NextFuncti
   try {
     const auctionId = parseInt(req.body.auctionId);
     const userId = req.user?.id;
-    //const { amount } = req.body;
 
     // Verifica che l'utente sia autenticato
     if (!userId) {
       return next(ErrorFactory.createError(ErrorType.Authentication));
     }
-
-    // Verifica che l'importo sia valido
-    // if (!amount || isNaN(amount)) {
-    //   return next(ErrorFactory.createError(ErrorType.Validation, 'Importo offerta non valido'));
-    // }
 
     // Registra l'offerta tramite il servizio
     const result = await bidService.placeBid(auctionId, userId);
@@ -54,7 +45,7 @@ export const placeBid = async (req: AuthRequest, res: Response, next: NextFuncti
     });
 
       res.status(HTTPStatus.CREATED).json({ message: 'Offerta registrata con successo', bid: result.bid });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
@@ -69,6 +60,7 @@ export const getBidsForAuction = async (req: AuthRequest, res: Response, next: N
     const auctionId = parseInt(req.body.auctionId);
     const userId = req.user?.id;
 
+    // Verifica che l'utente sia autenticato
     if (!userId) {
       return next(ErrorFactory.createError(ErrorType.Authentication));
     }
@@ -76,7 +68,7 @@ export const getBidsForAuction = async (req: AuthRequest, res: Response, next: N
     // Recupera tutti i rilanci per l'asta
     const bids = await bidService.getBidsForAuction(auctionId, userId);
     res.json(bids);
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };
