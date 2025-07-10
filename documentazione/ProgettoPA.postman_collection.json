@@ -1,0 +1,645 @@
+{
+	"info": {
+		"_postman_id": "42ec8385-1535-451a-bcc7-49f297ec130a",
+		"name": "ProgettoPA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45018967",
+		"_collection_link": "https://lively-escape-122334.postman.co/workspace/My-Workspace~20a3fd70-29f2-499e-894c-f3794c826443/collection/45018967-42ec8385-1535-451a-bcc7-49f297ec130a?action=share&source=collection_link&creator=45018967"
+	},
+	"item": [
+		{
+			"name": "Registration",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"part6@example.com\",\r\n  \"password\": \"hashedpassword3\",\r\n  \"role\": \"bid-participant\",\r\n  \"username\": \"part61\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/user/registration",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"user",
+						"registration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login admin",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"admin@example.com\",\r\n  \"password\": \"hashedpassword1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/user/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login creator",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"creator2@example.com\",\r\n  \"password\": \"hashedpassword4\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/user/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login participant",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"participant1@example.com\",\r\n  \"password\": \"hashedpassword3\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/user/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Auction",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6ImJpZC1jcmVhdG9yIiwiaWF0IjoxNzUxOTMwODgzLCJleHAiOjE3NTE5MzgwODN9.hd1_fIa7Qf9x51sMN_UrXoYuO5usXjTpgsn3Wa67uSk",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"Asta telefono2'\",\r\n  \"minParticipants\": 1,\r\n  \"maxParticipants\": 3,\r\n  \"entryFee\": 1.00,\r\n  \"maxPrice\": 20.00,\r\n  \"bidIncrement\": 2.00,\r\n  \"bidsPerParticipant\": 2,\r\n  \"startTime\": \"2025-07-08T14:14:43Z\",\r\n  \"relaunchTime\": 2,\r\n  \"status\": \"bidding\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/auction",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"auction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Join Auction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Nywicm9sZSI6ImJpZC1wYXJ0aWNpcGFudCIsImlhdCI6MTc1MTEyNTc2MiwiZXhwIjoxNzUxMTMyOTYyfQ.dbsXKqRBrmZMoLYGiwNkRmNw1Z0dSHlSRmEou6EVNgk",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"auctionId\": 3\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/auction/join",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"auction",
+						"join"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Start Auction (da usare se non funziona lo scheduler)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mywicm9sZSI6ImJpZC1jcmVhdG9yIiwiaWF0IjoxNzUxNzIxOTg5LCJleHAiOjE3NTE3MjkxODl9.18TGYGGH2BssldODBIU9c7k4zqHSaa9TxTx3_FiAMUI",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"auctionId\": 3\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/auction/start",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"auction",
+						"start"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Close Auction (da usare se non funziona lo scheduler)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6ImJpZC1jcmVhdG9yIiwiaWF0IjoxNzUxNTUzMzI2LCJleHAiOjE3NTE1NjA1MjZ9.IC1G0gBDTiFYnxZZrfWE4oXcmPNRa-Rg1IAyLaCKBK8",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"auctionId\": 3\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/auction/close",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"auction",
+						"close"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Change auction status (da created a open)",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6ImJpZC1jcmVhdG9yIiwiaWF0IjoxNzUxOTMwODgzLCJleHAiOjE3NTE5MzgwODN9.hd1_fIa7Qf9x51sMN_UrXoYuO5usXjTpgsn3Wa67uSk",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"auctionId\": 24,\r\n  \"status\": \"open\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/auction",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"auction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Filtered Auctions",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzUxMDE5NTU0LCJleHAiOjE3NTEwMjY3NTR9.qNpLBRpMaGiTBHiAaKDglziHEb51gdosvNlACVgTmlE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"status\": \"open\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/auction",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"auction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Auctions",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/auction",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"auction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Bid",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwicm9sZSI6ImJpZC1wYXJ0aWNpcGFudCIsImlhdCI6MTc1MTczMjQxMCwiZXhwIjoxNzUxNzM5NjEwfQ.sRU1qfVhY-L--lnBR6ky-Sj85X3rPG2UMkXLKompXis",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"auctionId\": 9\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/bid",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"bid"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "View all bids",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwicm9sZSI6ImJpZC1wYXJ0aWNpcGFudCIsImlhdCI6MTc1MjA3MTQwNiwiZXhwIjoxNzUyMDc4NjA2fQ.sLR7UBhSbYDqo_JQjuEB2Ix048u6j0yXK3nRJBN2CNQ",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"auctionId\": 21\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/bid/all",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"bid",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Wallet",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzUxMTIxNDkxLCJleHAiOjE3NTExMjg2OTF9.MZvPbL_kKWhtfElh28ZRMnGqPlaIo1-qL52y-0EH2gA",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"Asta Ipad\",\r\n  \"minParticipants\": 1,\r\n  \"maxParticipants\": 10,\r\n  \"entryFee\": 15.00,\r\n  \"maxPrice\": 100.00,\r\n  \"minIncrement\": 5.00,\r\n  \"bidsPerParticipant\": 5,\r\n  \"startTime\": \"2025-06-27T12:00:00Z\",\r\n  \"endTime\": \"2025-07-01T13:00:00Z\",\r\n  \"relaunchTime\": 30,\r\n  \"status\": \"open\"\r\n}\r\n"
+				},
+				"url": {
+					"raw": "http://localhost:3000/wallet",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"wallet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Recharge Wallet",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzUyMTAxMzE4LCJleHAiOjE3NTIxMDg1MTh9.6d704m3I7YDfymlKEl_jYPcXEned9frkf6thUbSNGVU",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"userId\": 4,\r\n  \"amount\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/wallet",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"wallet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Auction History",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwicm9sZSI6ImJpZC1wYXJ0aWNpcGFudCIsImlhdCI6MTc1MjA3MTQwNiwiZXhwIjoxNzUyMDc4NjA2fQ.sLR7UBhSbYDqo_JQjuEB2Ix048u6j0yXK3nRJBN2CNQ",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/stats/history?from=2025-06-29&to=2025-07-10&format=pdf\n",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"stats",
+						"history"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2025-06-29"
+						},
+						{
+							"key": "to",
+							"value": "2025-07-10"
+						},
+						{
+							"key": "format",
+							"value": "pdf\n"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Expenses",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mywicm9sZSI6ImJpZC1wYXJ0aWNpcGFudCIsImlhdCI6MTc1MTQ2NDIzOCwiZXhwIjoxNzUxNDcxNDM4fQ.tv-xZYFGTbSh_ToPcXxlMIlCGcm4aaFTPsBKjYA12kU",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/stats/expenses?from=2024-01-01&to=2025-12-31",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"stats",
+						"expenses"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2024-01-01"
+						},
+						{
+							"key": "to",
+							"value": "2025-12-31"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Stats",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzUyMDcxNDk0LCJleHAiOjE3NTIwNzg2OTR9.xr0LDECRCR8Z40IefITUqU-bA5dYVLtEpv0nSgms7f8",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/stats?from=2024-06-30&to=2025-08-01",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"stats"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2024-06-30"
+						},
+						{
+							"key": "to",
+							"value": "2025-08-01"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
