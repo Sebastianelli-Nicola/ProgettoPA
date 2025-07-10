@@ -410,7 +410,7 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
         },
     ]
     ```
-#### POST`/join` → iscriviti a un’asta (bid-participant)
+#### POST `/join` → iscriviti a un’asta (bid-participant)
   - **Corpo della richiesta**:
 
      | Key                 | Value                     |
@@ -424,7 +424,8 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
       }
       ```
 
-#### POST `/auction/start` → avvia asta (admin, bid-creator), solo se non funziona lo scheduler
+#### POST `/auction/start` → avvia asta (admin, bid-creator), 
+ <u>Da utilizzare solo nel caso non funzioni lo scheduler</u>
    - **Corpo della richiesta**:
 
       | Key                 | Value                     |
@@ -438,7 +439,8 @@ Una volta completata l’elaborazione — con successo o con un errore — la ri
     }
     ```
 
-#### POST `/auction/close` → chiude l’asta (bid-creator), solo se non funziona lo scheduler
+#### POST `/auction/close` → chiude l’asta (bid-creator)
+ <u>Da utilizzare solo nel caso non funzioni lo scheduler</u>
   - **Corpo della richiesta**:
 
     | Key                 | Value                     |
@@ -706,7 +708,7 @@ Lo scheduler si articola in due fasi principali, eseguite in sequenza durante og
 
 In questa fase, lo scheduler controlla tutte le aste che:
 
-- si trovano in stato `created` o `open`,
+- si trovano in stato `open`,
 - hanno un `startTime` inferiore o uguale all’orario attuale.
 
 Se l’asta è nello stato `open`, viene tentato l’avvio tramite il metodo `auctionService.startAuction(id)`.
@@ -745,8 +747,7 @@ Lo scheduler è responsabile delle seguenti transizioni di stato nel ciclo di vi
 
 | Stato attuale | Condizione                     | Azione eseguita              | Nuovo stato       |
 |---------------|--------------------------------|-------------------------------|-------------------|
-| `created`     | L'orario di `startTime` è arrivato | Verifica partecipanti         | `open` → `bidding` oppure `cancelled` |
-| `open`        | L'orario di `startTime` è arrivato | Avvio dell'asta               | `bidding`         |
+| `open`        | L'orario di `startTime` è arrivato | Verifica partecipanti  e Avvio dell'asta               | `bidding` oppure `cancelled`        |
 | `bidding`     | L'orario di `endTime` è passato    | Calcolo vincitore e chiusura  | `closed`          |
 
 
