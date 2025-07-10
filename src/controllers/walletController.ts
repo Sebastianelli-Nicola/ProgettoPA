@@ -58,12 +58,8 @@ export const rechargeWallet = async (req: AuthRequest, res: Response, next: Next
     const wallet = await walletService.rechargeWallet(userId, Number(amount));
 
     res.status(HTTPStatus.OK).json({ message: 'Ricarica completata', balance: wallet.balance.toFixed(2), });
-  } catch (error: any) {
-    if (error.status) {
-      res.status(error.status).json({ message: error.message });
-    } else {
+  } catch (error) {
       next(error);
-    }
   }
 };
 

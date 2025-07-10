@@ -79,35 +79,49 @@ export class StatsService {
    * @returns Le spese dell'utente.
    */
   async getUserExpenses(userId: number, from?: Date, to?: Date) {
-  // Recupera tutte le partecipazioni dell'utente nel periodo specificato
-  const participations = await this.participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
+    // Recupera tutte le partecipazioni dell'utente nel periodo specificato,
+    // includendo anche le aste associate a ciascuna partecipazione.
+    const participations = await this.participationDAO.findAllByUserWithDateAndAuction(userId, from, to);
 
-  let totalFees = 0;
-  let totalSpentOnWins = 0;
+    // Inizializza le variabili per accumulare costi.
+    let totalFees = 0;           // Totale delle commissioni di partecipazione.
+    let totalSpentOnWins = 0;    // Totale speso per le aste vinte.
 
-  for (const p of participations) {
-    const fee = typeof p.fee === 'string' ? parseFloat(p.fee) : p.fee;
-    totalFees += fee;
+    // Itera su ciascuna partecipazione dell'utente.
+    for (const p of participations) {
+      // Converte la fee da stringa a numero, se necessario.
+      const fee = typeof p.fee === 'string' ? parseFloat(p.fee) : p.fee;
+      totalFees += fee; // Somma la fee al totale.
 
-    if (p.isWinner) {
-      const winningBid = await this.bidDAO.findTopBidByAuction( p.auctionId );
-      if (winningBid) {
-        const amount = typeof winningBid.amount === 'string' ? parseFloat(winningBid.amount) : winningBid.amount;
-        totalSpentOnWins += amount;
+      // Se l'utente ha vinto questa asta...
+      if (p.isWinner) {
+        // Recupera l'offerta vincente per l'asta associata.
+        const winningBid = await this.bidDAO.findTopBidByAuction(p.auctionId);
+
+        // Se c'è un'offerta vincente, somma il valore al totale speso per vincite.
+        if (winningBid) {
+          const amount = typeof winningBid.amount === 'string' ? parseFloat(winningBid.amount) : winningBid.amount;
+          totalSpentOnWins += amount;
+        }
       }
     }
+
+    // Restituisce un oggetto riepilogativo con:
+    // - l'ID dell'utente
+    // - il totale delle commissioni pagate
+    // - il totale speso per le aste vinte
+    // - il totale complessivo
+    // - il periodo di riferimento (da e a)
+    return {
+      userId,
+      totalParticipationFees: totalFees.toFixed(2),       // Due decimali per formattazione.
+      totalWinningSpending: totalSpentOnWins.toFixed(2),  // Due decimali per formattazione.
+      total: (totalFees + totalSpentOnWins).toFixed(2),   // Totale complessivo.
+      from: from || null,  // Se non specificato, restituisce null.
+      to: to || null
+    };
   }
 
-
-    return {
-    userId,
-    totalParticipationFees: totalFees.toFixed(2),       
-    totalWinningSpending: totalSpentOnWins.toFixed(2),   
-    total: (totalFees + totalSpentOnWins).toFixed(2),    
-    from: from || null,
-    to: to || null,
-  };
-}
 
   /**
    * Ottiene lo storico delle aste alle quali si è partecipato distinguendo per quelle che 

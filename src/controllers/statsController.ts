@@ -22,6 +22,7 @@ export const getAuctionStats = async (req: Request, res: Response, next: NextFun
   try {
     const { from, to } = req.query;
 
+    // Verifica validità delle date
     if (from && isNaN(Date.parse(from as string))) {
       return next(ErrorFactory.createError(ErrorType.InvalidFromDate));
     }
@@ -81,10 +82,12 @@ export const getAuctionHistory = async (req: AuthRequest, res: Response, next: N
     const userId = req.user?.id;
     const { from, to, format } = req.query;
 
+    // Verifica che l'utente sia autenticato
     if (!userId) {
       return next(ErrorFactory.createError(ErrorType.Authentication));
     }
 
+    // Verifica validità delle date
     if (from && isNaN(Date.parse(from as string))) {
       return next(ErrorFactory.createError(ErrorType.InvalidFromDate));
     }
