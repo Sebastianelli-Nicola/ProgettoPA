@@ -935,7 +935,13 @@ I file a cui si fa riferimento si trovano nella cartella "src/dao".
 
 Tutte le rotte sono state provate utilizzando Postman, ecco il link per ottenere le raccolte e l'ambiente per provare l'applicazione:
 
+[Collection Postman](https://lively-escape-122334.postman.co/workspace/My-Workspace~20a3fd70-29f2-499e-894c-f3794c826443/collection/45018967-42ec8385-1535-451a-bcc7-49f297ec130a?action=share&creator=45018967)
+[Collection per il websocket](https://lively-escape-122334.postman.co/workspace/My-Workspace~20a3fd70-29f2-499e-894c-f3794c826443/collection/685ff5cd70a904ea7e3cb1aa?action=share&creator=45018967)
+
+> Altrimenti se si vuole salvare il file Json della collection, cliccare sul tasto "download raw"
 [Scarica il Json della collection Postman](documentazione/ProgettoPA.postman_collection.json)
+
+
 
 ### Testing jest
 Il progetto include una suite di test automatizzati scritti in TypeScript usando Jest, con l’obiettivo di verificare il corretto funzionamento delle logiche di business principali.
