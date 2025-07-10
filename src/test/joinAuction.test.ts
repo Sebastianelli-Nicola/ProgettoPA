@@ -1,5 +1,24 @@
 import { AuctionService } from '../services/auctionService';
-import { ErrorFactory, ErrorType } from '../factory/errorFactory';
+
+/**
+ * @overview
+ * Questa suite di test verifica il comportamento del metodo `joinAuction` della classe `AuctionService`.
+ * Il metodo gestisce la logica di partecipazione degli utenti a un'asta, includendo controlli su:
+ * - Stato dell'asta (deve essere "open" per permettere la partecipazione)
+ * - Numero massimo di partecipanti
+ * - Saldo del wallet dell'utente (deve essere sufficiente per pagare la quota di ingresso)
+ * - Prevenzione di partecipazioni duplicate
+ * 
+ * I test usano DAO (Data Access Object) mockati per simulare l'interazione con il database e
+ * mockano anche le transazioni di Sequelize per verificare la corretta gestione atomica delle operazioni.
+ * 
+ * I casi testati includono:
+ * - Rifiuto della partecipazione se l'asta non è in stato "open"
+ * - Rifiuto della partecipazione se il wallet ha saldo insufficiente
+ * - Accettazione della partecipazione se tutte le condizioni sono soddisfatte,
+ *   con verifica delle chiamate ai DAO e aggiornamenti del saldo.
+ */
+
 
 // Mock DAO
 const mockAuctionDAO = {
@@ -36,6 +55,7 @@ describe('AuctionService joinAuction', () => {
 
   beforeEach(() => {
     service = new AuctionService();
+    // Iniettiamo i DAO mock nel servizio
     (service as any).auctionDAO = mockAuctionDAO;
     (service as any).participationDAO = mockParticipationDAO;
     (service as any).walletDAO = mockWalletDAO;
@@ -127,7 +147,7 @@ describe('AuctionService joinAuction', () => {
 
     const res = await service.joinAuction(1, 1);
     expect(res).toEqual({ message: 'Partecipazione registrata con successo' });
-
+    // Verifica che i DAO siano stati chiamati con i parametri giusti
     expect(mockParticipationDAO.createParticipation).toHaveBeenCalledWith(
       { userId: 1, auctionId: 1, fee: 10 },
       mockTransaction

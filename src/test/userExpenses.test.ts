@@ -1,5 +1,20 @@
 import { StatsService } from '../services/statsService';
 
+/**
+ * @overview
+ * Test suite per `StatsService.getUserExpenses`, che calcola le spese totali sostenute da un utente
+ * in base alle partecipazioni alle aste e alle vittorie ottenute.
+ *
+ * I test coprono:
+ * - Il calcolo della somma delle fee di partecipazione.
+ * - Il calcolo dell'importo totale speso in offerte vincenti.
+ * - La restituzione di un oggetto aggregato con i totali e gli estremi temporali.
+ * - La gestione del caso in cui l'utente non abbia partecipato ad alcuna asta.
+ *
+ * I DAO `participationDAO` e `bidDAO` sono mockati con Jest per garantire l’isolamento e il controllo completo dei dati.
+ */
+
+
 describe('StatsService - getUserExpenses', () => {
   let service: StatsService;
 

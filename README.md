@@ -795,11 +795,20 @@ Ogni partecipante può visualizzare:
 Il progetto segue il pattern architetturale Model - Controller - Service, una struttura ampiamente adottata nello sviluppo di applicazioni backend per la sua capacità di favorire modularità, scalabilità e facilità di manutenzione, che a differenza del classico paradigma MVC (Model-View-Controller) omette la componente 'view', poiché in questo contesto non è prevista la gestione di interfacce utente. L’attenzione è quindi interamente rivolta alla strutturazione della logica applicativa e alla gestione dei dati.
 ##### MODEL:
  Il Model definisce la struttura dati dell’applicazione e gestisce l’interazione con il database. In questo progetto, i modelli sono implementati utilizzando Sequelize, un ORM per Node.js che consente di interfacciarsi con PostgreSQL in modo strutturato e ad alto livello. Sequelize permette di definire i modelli tramite classi o oggetti descrittivi, astraendo le query SQL sottostanti e garantendo un codice più chiaro, riutilizzabile e manutenibile.
+
+ ![Alt text](documentazione/model.png)
+
 ##### CONTROLLER:
  I Controller costituiscono il punto di ingresso per tutte le richieste HTTP indirizzate all’applicazione. Il loro compito è ricevere le richieste dal client, estrarre e validare i parametri necessari (con eventuale supporto dei middleware), e coordinare il flusso operativo. Una volta validati i dati, i Controller delegano l’elaborazione alla corrispondente classe Service, incaricata di eseguire la logica applicativa. 
  Oltre a smistare le richieste, i Controller sono responsabili della preparazione e formattazione delle risposte da restituire al client, comprensive di dati, messaggi di errore e codici di stato HTTP adeguati. Non contengono logica di business complessa, ma fungono da ponte tra il client e la logica applicativa, promuovendo una chiara separazione delle responsabilità e migliorando l’organizzazione del codice.
+
+ ![Alt text](documentazione/controller.png)
+
 ##### SERVICE:
  Il Service contengono la logica di business dell’applicazione. Nei service vengono implementate le funzionalità principali del sistema, come la gestione delle aste, il calcolo delle statistiche e la gestione dei portafogli degli utenti. . I Controller delegano ai Service l’esecuzione delle azioni, mantenendo così separati i ruoli: i Controller gestiscono il flusso delle richieste, mentre i Service si occupano dell’elaborazione vera e propria.
+
+ ![Alt text](documentazione/service.png)
+
 
 
 
@@ -927,6 +936,53 @@ I file a cui si fa riferimento si trovano nella cartella "src/dao".
 Tutte le rotte sono state provate utilizzando Postman, ecco il link per ottenere le raccolte e l'ambiente per provare l'applicazione:
 
 🔗 *[link al workspace Postman (se disponibile)]*
+
+### Testing jest
+Il progetto include una suite di test automatizzati scritti in TypeScript usando Jest, con l’obiettivo di verificare il corretto funzionamento delle logiche di business principali.
+Tutti i test si trovano nella cartella
+```bash
+src/test/
+```
+Ogni file di test verifica in isolamento il comportamento di un servizio specifico o di una parte dell'applicazione. I componenti esterni (come i DAO per l'accesso ai dati) vengono mockati per isolare la logica da testare.
+è possibile eseguire i test con:
+```bash
+npm test
+```
+oppure direttamente con:
+```bash
+npx jest
+```
+
+Nel dettaglio:
+1. authMiddlewareHandler.test.ts
+Verifica il comportamento del middleware di autenticazione e autorizzazione (authWithRoles), che protegge le rotte in base al ruolo utente contenuto nel token JWT.
+
+- Blocca le richieste prive di header Authorization
+- Rifiuta i token JWT non validi
+- Rifiuta accessi con ruolo non autorizzato
+- Permette il passaggio al next() solo se token e ruolo sono validi
+
+  Utilizza jsonwebtoken per simulare token reali e verifica che gli errori siano correttamente inoltrati.
+
+2. joinAuction.test.ts
+Testa la logica del metodo joinAuction del servizio AuctionService, che gestisce la partecipazione di un utente a un'asta.
+
+- Rifiuta la partecipazione se l’asta non è aperta
+- Rifiuta se l’utente ha un saldo insufficiente
+- Accetta la partecipazione se tutte le condizioni sono soddisfatte, aggiornando correttamente il wallet e registrando la partecipazione
+
+  Tutti i DAO e le transazioni Sequelize sono mockati per simulare condizioni di successo e fallimento in sicurezza.
+
+3. userExpenses.test.ts
+Testa la funzione getUserExpenses del StatsService, che calcola quanto ha speso un utente su un intervallo temporale.
+
+- Somma correttamente commissioni di partecipazione e importi offerti in caso di vittoria
+- Gestisce correttamente il caso in cui non ci siano partecipazioni (spesa totale = 0)
+
+  I DAO vengono simulati per restituire partecipazioni e offerte fittizie. I valori sono arrotondati e formattati come stringhe con due decimali.
+
+![Alt text](documentazione/test.png)
+
 
 
 ## Sviluppi futuri 
