@@ -71,7 +71,7 @@ Il sistema prevede le seguenti funzionalità, con autenticazione JWT e autorizza
 Come prima cosa è necessario clonare il repository di GitHub:
 
 ```bash
-git clone <URL_DEL_REPO>
+git clone https://github.com/Sebastianelli-Nicola/ProgettoPA.git
 ```
 
 Oppure scaricarlo come ZIP da GitHub.
@@ -88,6 +88,12 @@ Oppure avvia **Docker Desktop**, che è più intuitivo.
 Assicurati di avere tutti i file .env necessari per installare il software
 
 Una volta attivo Docker, spostati nella cartella del progetto e tramite il terminale esegui:
+
+```bash
+npm install
+```
+
+Con questo comando vengono installate tutte le dipendenze necessarie
 
 ```bash
 tsc
@@ -122,6 +128,68 @@ Per accedere al database PostgreSQL dal container:
 docker exec -it pg-auction psql -U postgres -d auction_db
 ```
 
+---
+### Seeders
+Il seeding è automatico e viene utilizzato per popolare il database con dati di esempio per testare l'applicazione in ambiente di sviluppo.
+Di seguito una panoramica dei dati generati:
+
+### 1. Utenti (`users`)
+
+Vengono creati 6 utenti con ruoli differenti:
+
+- `admin` – amministratore della piattaforma  
+- `creator1`, `creator2` – utenti con ruolo `bid-creator` (creatori di aste)  
+- `participant1`, `participant2`, `participant3` – utenti con ruolo `bid-participant` (partecipanti alle aste)
+
+> Le password sono già criptate (bcrypt hash) e non leggibili in chiaro.
+
+###  2. Wallets (`wallets`)
+
+A ogni utente è associato un wallet iniziale con saldo predefinito:
+
+- Admin: €1000  
+- Creators: €2000 / €1000  
+- Partecipanti: tra €1000 e €2000
+
+###  3. Aste (`auctions`)
+
+Vengono create 7 aste con vari parametri. Alcuni esempi:
+
+- **Aste aperte** con orari futuri (`Asta 1`, `Asta 2`, `Asta 4`, `Asta 5`, `Asta 7`)  
+- **Aste chiuse** con orari passati (`Asta 3`, `Asta 6`)  
+
+Ogni asta include:
+- `entryFee`, `maxPrice`, `bidIncrement`, `bidsPerParticipant`  
+- `status` (open/closed)  
+- `startTime`, `endTime`, `relaunchTime`
+
+###  4. Partecipazioni (`participations`)
+
+Simula utenti iscritti ad aste, includendo:
+
+- Quota pagata (`fee`)  
+- Validità della partecipazione (`isValid`)  
+- Vincitore (`isWinner`, impostato a `false` per test neutro)
+
+###  5. Offerte (`bids`)
+
+Sono presenti alcune offerte simulate su aste aperte, per testare:
+
+- Ordine temporale delle offerte  
+- Interazione tra partecipanti  
+- Rilanci minimi e sequenze valide
+
+###  `down()` – Rollback
+
+Lo script `down()` elimina tutti i dati generati in ordine inverso:
+
+```ts
+await queryInterface.bulkDelete('bids', {}, {});
+await queryInterface.bulkDelete('participations', {}, {});
+await queryInterface.bulkDelete('auctions', {}, {});
+await queryInterface.bulkDelete('wallets', {}, {});
+await queryInterface.bulkDelete('users', {}, {});
+```
 ---
 
 ### Architettura Backend
