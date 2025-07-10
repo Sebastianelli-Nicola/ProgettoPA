@@ -733,7 +733,7 @@ Ogni partecipante può visualizzare:
 
 #### Login
 
-![Alt text](documentazione/login.png)
+![Alt text](documentazione/Login.png)
 
 #### Crea Asta
 
@@ -765,7 +765,7 @@ Ogni partecipante può visualizzare:
 
 #### Esegui puntata
 
-![Alt text](documentazione/Place_Bid.png)
+![Alt text](documentazione/Place_bid.png)
 
 #### Verifica credito residuo
 
