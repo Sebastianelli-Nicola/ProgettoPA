@@ -840,7 +840,7 @@ Tutte le classi middleware derivano da una classe base comune (`BaseHandler`) e 
 
 I file a cui si fa riferimento si trovano nella cartella "src/middlewares".
 
-  ![Alt text](documentazione/auth_middleware.png)
+  ![Alt text](documentazione/auth_middleware.PNG)
 
 
 ### Factory
@@ -867,7 +867,7 @@ Nel progetto, questo pattern è stato impiegato per gestire la creazione central
 
 I file a cui si fa riferimento si trovano nella cartella "src/factory".
 
-  ![Alt text](documentazione/error_factory.png)
+  ![Alt text](documentazione/error_factory.PNG)
 
 ### DAO (Data Access Object)
 
@@ -927,7 +927,7 @@ Nel backend sviluppato, è stato adottato il pattern Singleton per la gestione d
 
 I file a cui si fa riferimento si trovano nella cartella "src/dao".
 
-  ![Alt text](documentazione/singleton.png)
+  ![Alt text](documentazione/singleton.PNG)
 
 ---
 
@@ -935,7 +935,7 @@ I file a cui si fa riferimento si trovano nella cartella "src/dao".
 
 Tutte le rotte sono state provate utilizzando Postman, ecco il link per ottenere le raccolte e l'ambiente per provare l'applicazione:
 
-🔗 *[link al workspace Postman (se disponibile)]*
+[Scarica il Json della collection Postman](documentazione\ProgettoPA.postman_collection.json)
 
 ### Testing jest
 Il progetto include una suite di test automatizzati scritti in TypeScript usando Jest, con l’obiettivo di verificare il corretto funzionamento delle logiche di business principali.
