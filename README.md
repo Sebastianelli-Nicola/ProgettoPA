@@ -935,7 +935,7 @@ I file a cui si fa riferimento si trovano nella cartella "src/dao".
 
 Tutte le rotte sono state provate utilizzando Postman, ecco il link per ottenere le raccolte e l'ambiente per provare l'applicazione:
 
-[Scarica il Json della collection Postman](documentazione\ProgettoPA.postman_collection.json)
+[Scarica il Json della collection Postman](https://raw.githubusercontent.com/Sebastianelli-Nicola/ProgettoPA/refs/heads/main/documentazione/ProgettoPA.postman_collection.json)
 
 ### Testing jest
 Il progetto include una suite di test automatizzati scritti in TypeScript usando Jest, con l’obiettivo di verificare il corretto funzionamento delle logiche di business principali.
